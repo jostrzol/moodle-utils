@@ -28,6 +28,10 @@
             // var all_len = document.getElementsByClassName("qnbutton").length
             var not_answered_len = document.getElementsByClassName("qnbutton notyetanswered").length
 
+            if (not_answered_len == 0) {
+                return
+            }
+
             var t_per_question = time_s / not_answered_len
 
             var m = parseInt(t_per_question / 60)
