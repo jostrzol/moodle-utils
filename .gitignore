@@ -1,0 +1,6 @@
+tls
+moodle-utils
+__debug_bin
+.vscode
+**/test*
+dump
