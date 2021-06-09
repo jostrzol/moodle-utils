@@ -4,3 +4,4 @@ __debug_bin
 .vscode
 **/test*
 dump
+node_modules
