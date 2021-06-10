@@ -23,7 +23,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
 };
 (function () {
     'use strict';
-    var _Question_html, _Question_text, _QuestionMultichoice_counts, _QuestionMultichoice_radios, _ImprovedTimer_org_update, _ImprovedTimer_moodle_timer, _ImprovedTimer_timer_per_question;
+    var _Question_html, _Question_text, _QuestionMultichoice_counts, _QuestionMultichoice_inputs, _ImprovedTimer_org_update, _ImprovedTimer_moodle_timer, _ImprovedTimer_timer_per_question;
     const win_url = new URL(window.location.href);
     const cmid = win_url.searchParams.get("cmid");
     const attempt = win_url.searchParams.get("attempt");
@@ -39,7 +39,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
         });
     }
     function get_answers(qmap, ...questions) {
-        if (!questions) {
+        if (questions.length == 0) {
             questions = [...qmap.values()];
         }
         let url = `${base_url}/get-answers?${url_id}`;
@@ -68,41 +68,52 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
         constructor(html_element) {
             super(html_element);
             _QuestionMultichoice_counts.set(this, new Map());
-            _QuestionMultichoice_radios.set(this, new Map());
-            for (let radio of $("[value!=-1]:radio", html_element)) {
-                let label = $("~ .d-flex", radio)[0];
+            _QuestionMultichoice_inputs.set(this, new Map());
+            for (let input of $("[value!=-1]:radio, :checkbox", html_element)) {
+                let label = $("~ .d-flex", input)[0];
                 let counter = document.createElement("span");
                 counter.className = "answercounter";
                 counter.innerHTML = "0";
                 label.appendChild(counter);
                 let answer_text = $("div.flex-fill", label)[0].innerText.replaceAll("\n", "");
                 __classPrivateFieldGet(this, _QuestionMultichoice_counts, "f").set(answer_text, counter);
-                __classPrivateFieldGet(this, _QuestionMultichoice_radios, "f").set(radio, answer_text);
+                __classPrivateFieldGet(this, _QuestionMultichoice_inputs, "f").set(input, answer_text);
             }
-            html_element.addEventListener('change', (this.changeHandler).bind(this), false);
-            let cancel = $(".qtype_multichoice_clearchoice a")[0];
+            let cancel = $(".qtype_multichoice_clearchoice a", html_element)[0];
             if (cancel) {
-                // no cancel for multichoice with multiple answers
+                // no cancel in multichoice with multiple answers
+                html_element.addEventListener('change', (this.changeHandlerRadio).bind(this), false);
                 cancel.addEventListener('click', (this.cancelHandler).bind(this), false);
             }
+            else {
+                html_element.addEventListener('change', (this.changeHandlerMultichoice).bind(this), false);
+            }
         }
-        changeHandler(e) {
+        changeHandlerMultichoice() {
             let data = {};
-            data[this.text] = __classPrivateFieldGet(this, _QuestionMultichoice_radios, "f").get(e.target);
+            let data_checked = data[this.text] = [];
+            for (let checked of $("input[value!=-1]:checked", this.html)) {
+                data_checked.push(__classPrivateFieldGet(this, _QuestionMultichoice_inputs, "f").get(checked));
+            }
+            send_gather_form(data);
+        }
+        changeHandlerRadio(e) {
+            let data = {};
+            data[this.text] = [__classPrivateFieldGet(this, _QuestionMultichoice_inputs, "f").get(e.target)];
             send_gather_form(data);
         }
         cancelHandler() {
             let data = {};
-            data[this.text] = "";
+            data[this.text] = [];
             send_gather_form(data);
         }
         update_counters(data) {
             for (let [answer_text, count] of Object.entries(data)) {
-                __classPrivateFieldGet(this, _QuestionMultichoice_counts, "f")[answer_text] = count;
+                __classPrivateFieldGet(this, _QuestionMultichoice_counts, "f").get(answer_text).innerText = count;
             }
         }
     }
-    _QuestionMultichoice_counts = new WeakMap(), _QuestionMultichoice_radios = new WeakMap();
+    _QuestionMultichoice_counts = new WeakMap(), _QuestionMultichoice_inputs = new WeakMap();
     class ImprovedTimer {
         constructor(moodle_timer, answer_check_duration = 1000) {
             _ImprovedTimer_org_update.set(this, void 0);

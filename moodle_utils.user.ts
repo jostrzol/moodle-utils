@@ -61,7 +61,7 @@ declare var M: Moodle.Moodle
     }
 
     function get_answers(qmap: Map<string, Question>, ...questions: Question[]) {
-        if (!questions) { questions = [...qmap.values()] }
+        if (questions.length == 0) { questions = [...qmap.values()] }
         let url = `${base_url}/get-answers?${url_id}`
         for (let q of questions) {
             url += `&q=${q.text}`
@@ -88,11 +88,11 @@ declare var M: Moodle.Moodle
 
     class QuestionMultichoice extends Question {
         #counts = new Map<string, HTMLSpanElement>()
-        #radios = new Map<HTMLInputElement, string>()
+        #inputs = new Map<HTMLInputElement, string>()
         constructor(html_element: HTMLDivElement) {
             super(html_element)
-            for (let radio of $("[value!=-1]:radio", html_element) as JQuery<HTMLInputElement>) {
-                let label = $("~ .d-flex", radio)[0]
+            for (let input of $("[value!=-1]:radio, :checkbox", html_element) as JQuery<HTMLInputElement>) {
+                let label = $("~ .d-flex", input)[0]
 
                 let counter = document.createElement("span")
                 counter.className = "answercounter"
@@ -102,34 +102,47 @@ declare var M: Moodle.Moodle
                 let answer_text = $("div.flex-fill", label)[0].innerText.replaceAll("\n", "")
 
                 this.#counts.set(answer_text, counter)
-                this.#radios.set(radio, answer_text)
+                this.#inputs.set(input, answer_text)
             }
 
-            html_element.addEventListener('change', (this.changeHandler).bind(this), false)
-            let cancel = $(".qtype_multichoice_clearchoice a")[0]
+            let cancel = $(".qtype_multichoice_clearchoice a", html_element)[0]
             if (cancel) {
-                // no cancel for multichoice with multiple answers
+                // no cancel in multichoice with multiple answers
+                html_element.addEventListener('change', (this.changeHandlerRadio).bind(this), false)
                 cancel.addEventListener('click', (this.cancelHandler).bind(this), false)
+            } else {
+                html_element.addEventListener('change', (this.changeHandlerMultichoice).bind(this), false)
             }
         }
 
-        private changeHandler(e: Event) {
+        private changeHandlerMultichoice() {
             let data = {}
-            data[this.text] = this.#radios.get(e.target as HTMLInputElement)
+            let data_checked: string[] = data[this.text] = []
+            for (let checked of $("input[value!=-1]:checked", this.html) as JQuery<HTMLInputElement>) {
+                data_checked.push(this.#inputs.get(checked))
+            }
             send_gather_form(data)
         }
+
+        private changeHandlerRadio(e: Event) {
+            let data = {}
+            data[this.text] = [this.#inputs.get(e.target as HTMLInputElement)]
+            send_gather_form(data)
+        }
+
         private cancelHandler() {
             let data = {}
-            data[this.text] = ""
+            data[this.text] = []
             send_gather_form(data)
         }
 
         update_counters(data: Record<string, string>) {
             for (let [answer_text, count] of Object.entries(data)) {
-                this.#counts[answer_text] = count
+                this.#counts.get(answer_text).innerText = count
             }
         }
     }
+
     class ImprovedTimer {
         #org_update: Function
         #moodle_timer: Moodle.Timer

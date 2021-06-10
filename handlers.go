@@ -18,7 +18,7 @@ func gatherFormHandler(w http.ResponseWriter, r *http.Request) (error, int) {
 		return err, http.StatusBadRequest
 	}
 
-	var answers map[string]string
+	var answers map[string][]string
 	d := json.NewDecoder(r.Body)
 	err = d.Decode(&answers)
 	if err != nil {
@@ -33,13 +33,13 @@ func gatherFormHandler(w http.ResponseWriter, r *http.Request) (error, int) {
 
 func getAnswersHandler(w http.ResponseWriter, r *http.Request) (error, int) {
 	enableCors(&w)
-	err := parseForm(r)
+	err := parseForm(r, "cmid", "attempt", "q")
 	if err != nil {
 		return err, http.StatusBadRequest
 	}
-	answerCounts := quizMap.getAnswerCounts(r.Form["cmid"][0], r.Form["question"][0], r.Form["attempt"][0])
+	questionsAnswers := quizMap.getAnswerCounts(r.Form["cmid"][0], r.Form["attempt"][0], r.Form["q"])
 	encoder := json.NewEncoder(w)
-	return encoder.Encode(answerCounts), http.StatusInternalServerError
+	return encoder.Encode(questionsAnswers), http.StatusInternalServerError
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) (error, int) {

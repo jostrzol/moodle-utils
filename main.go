@@ -11,24 +11,25 @@ type void struct{}
 
 var setMember void
 
-type stringSetT map[string]void
-type answerMapT map[string]stringSetT
-type questionMapT map[string]answerMapT
-type quizMapT map[string]questionMapT
+type StringSet map[string]void
+type AnswerMap map[string]StringSet
+type QuestionMap map[string]AnswerMap
+type QuizMap map[string]QuestionMap
 
-var quizMap = make(quizMapT)
+var quizMap = make(QuizMap)
 
-type answerCountsT map[string]int
+type AnswerCounts map[string]int
+type QuestionsAnswers map[string]AnswerCounts
 
-func (q *quizMapT) updateAnswer(quiz string, question string, answer string, attempt string) {
+func (q *QuizMap) updateAnswer(quiz string, question string, answers []string, attempt string) {
 	questionMap := (*q)[quiz]
 	if questionMap == nil {
-		questionMap = make(questionMapT)
+		questionMap = make(QuestionMap)
 		(*q)[quiz] = questionMap
 	}
 	answerMap := questionMap[question]
 	if answerMap == nil {
-		answerMap = make(answerMapT)
+		answerMap = make(AnswerMap)
 		questionMap[question] = answerMap
 	}
 
@@ -37,37 +38,42 @@ func (q *quizMapT) updateAnswer(quiz string, question string, answer string, att
 		delete(v, attempt)
 	}
 
-	// opt in for the selected answer
-	if answer != "" {
+	// opt in for the selected answers
+	for _, answer := range answers {
 		stringSet := answerMap[answer]
 		if stringSet == nil {
-			stringSet = make(stringSetT)
+			stringSet = make(StringSet)
 			answerMap[answer] = stringSet
 		}
 		stringSet[attempt] = setMember
 	}
 }
 
-func (q *quizMapT) getAnswerCounts(quiz string, question string, attempt string) answerCountsT {
+func (q *QuizMap) getAnswerCounts(quiz string, attempt string, questions []string) QuestionsAnswers {
+	questionsAnswers := make(QuestionsAnswers, len(questions))
+
 	questionMap := (*q)[quiz]
 	if questionMap == nil {
-		questionMap = make(questionMapT)
+		questionMap = make(QuestionMap)
 		(*q)[quiz] = questionMap
 	}
-	answerMap := questionMap[question]
-	if answerMap == nil {
-		answerMap = make(answerMapT)
-		questionMap[question] = answerMap
+
+	for _, question := range questions {
+		answerMap := questionMap[question]
+		if answerMap == nil {
+			continue
+		}
+		questionsAnswers[question] = make(AnswerCounts)
+		answerCounts := questionsAnswers[question]
+		for k, v := range answerMap {
+			count := len(v)
+			// if _, exists := v[attempt]; exists {
+			// 	count -= 1
+			// }
+			answerCounts[k] = count
+		}
 	}
-	answerCounts := make(answerCountsT, len(answerMap))
-	for k, v := range answerMap {
-		count := len(v)
-		// if _, exists := v[attempt]; exists {
-		// 	count -= 1
-		// }
-		answerCounts[k] = count
-	}
-	return answerCounts
+	return questionsAnswers
 }
 
 func parseForm(r *http.Request, required ...string) error {
