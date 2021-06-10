@@ -131,11 +131,11 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
             if (cancel) {
                 $(html_element).on('change', (this.changeHandlerRadio).bind(this));
                 $(cancel).on('click', (this.cancelHandler).bind(this));
-                // $("[value!=-1]:radio:checked").trigger('change') // send initial value
+                $("[value!=-1]:radio:checked", html_element).trigger('change'); // send initial value
             }
             else {
                 $(html_element).on('change', (this.changeHandlerMultichoice).bind(this));
-                // $(":checkbox:checked").trigger('change') // send initial value
+                $(":checkbox:checked", html_element).trigger('change'); // send initial value
             }
         }
         changeHandlerMultichoice() {
@@ -182,7 +182,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
                 }
             }
             $(html_element).on('change', (this.changeHandler).bind(this));
-            // $(":radio:checked").trigger('change') // send initial value
+            $(":radio:checked", html_element).trigger('change'); // send initial value
         }
         changeHandler(e) {
             let data = {};
@@ -216,6 +216,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
                     this.changeHandler({ target: e.target });
                 }
             }.bind(this));
+            $(":text", html_element).trigger('change'); // send initial value
         }
         changeHandler(e) {
             let data = {};
@@ -274,7 +275,12 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     _ImprovedTimer_moodle_timer = new WeakMap(), _ImprovedTimer_timer = new WeakMap();
     Y.on("domready", function () {
         add_style();
-        new ImprovedTimer(M.mod_quiz.timer);
+        if ($(".qnbutton.notyetanswered").length != 0) {
+            new ImprovedTimer(M.mod_quiz.timer);
+        }
+        if (base_url == "") {
+            return;
+        }
         var qmap = new Map();
         for (let q of $(".que")) {
             let que = null;
