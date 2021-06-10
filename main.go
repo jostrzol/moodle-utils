@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 type void struct{}
@@ -105,16 +106,20 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func main() {
-	var certificate = flag.String("c", "", "tls certificate (*.crt) filename")
-	var key = flag.String("k", "", "tls private key (*.key) filename")
-	var port = flag.String("p", "443", "port, dafaults to 443")
+	var certificate = flag.String("c", "", "[required] tls certificate (*.crt) filename")
+	var key = flag.String("k", "", "[required] tls private key (*.key) filename")
+	var port = flag.String("p", "443", "port")
 
 	flag.Parse()
 	if *certificate == "" {
-		log.Fatal("-c is required")
+		fmt.Fprintln(os.Stderr, "-c is required")
+		flag.Usage()
+		os.Exit(1)
 
 	} else if *key == "" {
-		log.Fatal("-k is required")
+		fmt.Fprintln(os.Stderr, "-k is required")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	cert, err := tls.LoadX509KeyPair(*certificate, *key)
