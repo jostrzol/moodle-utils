@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Moodle Utils
 // @namespace    http://tampermonkey.net/
-// @version      0.3
+// @version      0.4
 // @description  Displays time per question left
 // @author       Ogurczak
 // @match        https://*/mod/quiz/attempt*
