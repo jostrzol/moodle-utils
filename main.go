@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -104,11 +105,25 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func main() {
+	var certificate = flag.String("c", "", "tls certificate (*.crt) filename")
+	var key = flag.String("k", "", "tls private key (*.key) filename")
+	var port = flag.String("p", "443", "port, dafaults to 443")
 
-	cert, _ := tls.LoadX509KeyPair("tls/ogurczak.crt", "tls/ogurczak.key")
+	flag.Parse()
+	if *certificate == "" {
+		log.Fatal("-c is required")
+
+	} else if *key == "" {
+		log.Fatal("-k is required")
+	}
+
+	cert, err := tls.LoadX509KeyPair(*certificate, *key)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	s := &http.Server{
-		Addr:    ":8080",
+		Addr:    ":" + *port,
 		Handler: nil,
 		TLSConfig: &tls.Config{
 			Certificates: []tls.Certificate{cert},
