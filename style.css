@@ -1,0 +1,32 @@
+.moodleutils {
+    color: grey
+}
+
+.answercounter {
+    float: right;
+}
+
+.topshortanswers {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.topshortanswer {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.topshortanswercontent {
+    width: -webkit-fill-available;
+}
+
+.perquestion {
+    color: black
+}
+
+.timerperquestion {
+    font-weight: 700;
+    color: black
+}

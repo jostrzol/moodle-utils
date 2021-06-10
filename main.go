@@ -40,6 +40,9 @@ func (q *QuizMap) updateAnswer(quiz string, question string, answers []string, a
 
 	// opt in for the selected answers
 	for _, answer := range answers {
+		if answer == "" {
+			continue
+		}
 		stringSet := answerMap[answer]
 		if stringSet == nil {
 			stringSet = make(StringSet)
@@ -70,7 +73,11 @@ func (q *QuizMap) getAnswerCounts(quiz string, attempt string, questions []strin
 			// if _, exists := v[attempt]; exists {
 			// 	count -= 1
 			// }
-			answerCounts[k] = count
+			if count == 0 {
+				delete(answerMap, k)
+			} else {
+				answerCounts[k] = count
+			}
 		}
 	}
 	return questionsAnswers
