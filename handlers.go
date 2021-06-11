@@ -3,7 +3,6 @@ package main
 import (
 	"encoding/json"
 	"net/http"
-	"text/template"
 )
 
 func gatherFormHandler(w http.ResponseWriter, r *http.Request) (error, int) {
@@ -43,17 +42,19 @@ func getAnswersHandler(w http.ResponseWriter, r *http.Request) (error, int) {
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request) (error, int) {
-	if r.URL.Path != "/" {
-		http.NotFound(w, r)
-		return nil, 0
-	}
+	http.NotFound(w, r)
+	return nil, 0
+	// if r.URL.Path != "/" {
+	// 	http.NotFound(w, r)
+	// 	return nil, 0
+	// }
 
-	t, err := template.ParseFiles("dump/test.html")
-	if err != nil {
-		return err, http.StatusInternalServerError
-	}
+	// t, err := template.ParseFiles("dump/test.html")
+	// if err != nil {
+	// 	return err, http.StatusInternalServerError
+	// }
 
-	return t.Execute(w, nil), http.StatusInternalServerError
+	// return t.Execute(w, nil), http.StatusInternalServerError
 }
 
 func errHandlerWrapper(f func(w http.ResponseWriter, r *http.Request) (error, int)) http.HandlerFunc {

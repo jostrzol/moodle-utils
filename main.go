@@ -153,9 +153,7 @@ func main() {
 
 	if *isTLS {
 		log.Fatal(s.ListenAndServeTLS("", ""))
-
 	} else {
 		log.Fatal(s.ListenAndServe())
-
 	}
 }
