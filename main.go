@@ -106,38 +106,56 @@ func enableCors(w *http.ResponseWriter) {
 }
 
 func main() {
-	var certificate = flag.String("c", "", "[required] tls certificate (*.crt) filename")
-	var key = flag.String("k", "", "[required] tls private key (*.key) filename")
-	var port = flag.String("p", "443", "port")
+	var port = flag.String("p", "", "port")
+	var isTLS = flag.Bool("s", false, "run a https server instead of http")
+	var certificate = flag.String("c", "", "tls certificate for https server (*.crt) filename")
+	var key = flag.String("k", "", "tls private key for https server (*.key) filename")
 
 	flag.Parse()
-	if *certificate == "" {
-		fmt.Fprintln(os.Stderr, "-c is required")
-		flag.Usage()
-		os.Exit(1)
-
-	} else if *key == "" {
-		fmt.Fprintln(os.Stderr, "-k is required")
-		flag.Usage()
-		os.Exit(1)
-	}
-
-	cert, err := tls.LoadX509KeyPair(*certificate, *key)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	s := &http.Server{
 		Addr:    ":" + *port,
 		Handler: nil,
-		TLSConfig: &tls.Config{
+	}
+
+	if *port == "" {
+		if *isTLS {
+			*port = "443"
+		} else {
+			*port = "80"
+		}
+	}
+
+	if *isTLS {
+
+		if *certificate == "" {
+			fmt.Fprintln(os.Stderr, "-c is required")
+			flag.Usage()
+			os.Exit(1)
+
+		} else if *key == "" {
+			fmt.Fprintln(os.Stderr, "-k is required")
+			flag.Usage()
+			os.Exit(1)
+		}
+		cert, err := tls.LoadX509KeyPair(*certificate, *key)
+		if err != nil {
+			log.Fatal(err)
+		}
+		s.TLSConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
-		},
+		}
 	}
 
 	http.HandleFunc("/", errHandlerWrapper(rootHandler))
 	http.HandleFunc("/gather-form", errHandlerWrapper(gatherFormHandler))
 	http.HandleFunc("/get-answers", errHandlerWrapper(getAnswersHandler))
 
-	log.Fatal(s.ListenAndServeTLS("", ""))
+	if *isTLS {
+		log.Fatal(s.ListenAndServeTLS("", ""))
+
+	} else {
+		log.Fatal(s.ListenAndServe())
+
+	}
 }
