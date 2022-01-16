@@ -1,10 +1,12 @@
 // ==UserScript==
 // @name         Moodle Utils
 // @namespace    http://tampermonkey.net/
-// @version      0.4
+// @version      0.5
 // @description  Displays time per question left
 // @author       Ogurczak
 // @match        https://*/mod/quiz/attempt*
+// @match        https://github.com/Ogurczak/moodle-utils*
+// @match        https://*.moodlecloud.com/*
 // @grant        GM_addStyle
 // @grant        GM_getValue
 // @grant        GM_setValue
@@ -273,6 +275,11 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
         }
     }
     _ImprovedTimer_moodle_timer = new WeakMap(), _ImprovedTimer_timer = new WeakMap();
+    // enable only on quizes
+    // on the rest of matches enable just the configuration
+    const enable_regex = /^https:\/\/.*\/mod\/quiz\/attempt.*$/;
+    if (!enable_regex.test(window.location.href))
+        return;
     Y.on("domready", function () {
         add_style();
         if ($(".qnbutton.notyetanswered").length != 0) {
