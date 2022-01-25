@@ -13,6 +13,7 @@
 // @grant        GM_setValue
 // @grant        GM_registerMenuCommand
 // @require      https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
+// @require      http://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
 var __classPrivateFieldSet = (this && this.__classPrivateFieldSet) || function (receiver, state, value, kind, f) {
     if (kind === "m") throw new TypeError("Private method is not writable");
