@@ -1,32 +1,40 @@
 // ==UserScript==
-// @name         Moodle Utils
-// @namespace    http://tampermonkey.net/
-// @version      0.6
-// @description  Displays time per question left
-// @author       Ogurczak
-// @match        https://*/mod/quiz/attempt*
-// @match        https://*/mod/quiz*
-// @match        https://github.com/Ogurczak/moodle-utils*
-// @match        https://*.moodlecloud.com/*
-// @grant        GM_addStyle
-// @grant        GM_getValue
-// @grant        GM_setValue
-// @grant        GM_registerMenuCommand
-// @require      https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
+// @name            Moodle Utils
+// @author          Ogurczak
+// @description     Displays time per question left
+// @version         0.8
+// @namespace       https://github.com/Ogurczak/
+// @updateURL       https://github.com/Ogurczak/moodle-utils/raw/main/client/build/moodle_utils.user.js
+// @match           https://*/mod/quiz/attempt*
+// @match           https://*/mod/quiz*
+// @match           https://github.com/Ogurczak/moodle-utils*
+// @match           https://*.moodlecloud.com/*
+// @grant           GM_addStyle
+// @grant           GM_getValue
+// @grant           GM_setValue
+// @grant           GM_registerMenuCommand
+// @grant           GM_getResourceText
+// @resource        css https://raw.githubusercontent.com/Ogurczak/moodle-utils/main/client/style.css
+// @require         https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
+// @require         http://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
 
-declare namespace Y {
+declare namespace YUI {
     interface status {
         msg: string,
         success: boolean
         data: any
     }
+
+    interface Y {
+        on(s: string, fn: () => any): any
+        use(name: string, fn?: (Y?: Y, status?: status) => any): void
+    }
 }
 
-declare interface YUI {
-    on(s: string, fn: () => any): any
-    use(name: string, fn?: (Y?: YUI, status?: Y.status) => any): void
-}
+declare var Y: YUI.Y
+declare function GM_addStyle(css: string): void
+declare function GM_getResourceText(resource: string): string
 
 declare namespace Moodle {
     interface Timer {
@@ -94,40 +102,7 @@ declare function MonkeyConfig(arg: any): void
     }
 
     function add_style() {
-        GM_addStyle(`
-.moodleutils {
-    color: grey
-}
-
-.answercounter {
-    float: right;
-}
-
-.topshortanswers {
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-}
-
-.topshortanswer {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-}
-
-.topshortanswercontent {
-    width: -webkit-fill-available;
-}
-
-.perquestion {
-    color: black
-}
-
-.timerperquestion {
-    font-weight: 700;
-    color: black
-}
-`)
+        GM_addStyle(GM_getResourceText('css'))
     }
 
     abstract class Question {

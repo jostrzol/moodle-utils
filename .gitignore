@@ -5,3 +5,4 @@ __debug_bin
 **/test*
 dump
 node_modules
+build
