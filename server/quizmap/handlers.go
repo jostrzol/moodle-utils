@@ -2,23 +2,12 @@ package quizmap
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
 	"github.com/sirupsen/logrus"
 )
-
-// ErrHTTP represtents an error that can be replied to HTTP client
-type ErrHTTP struct {
-	error
-	HTTPMessage string
-	HTTPStatus  int
-}
-
-// Reply writes a response describing this error to the client
-func (e *ErrHTTP) Reply(w http.ResponseWriter) {
-	http.Error(w, e.HTTPMessage, e.HTTPStatus)
-}
 
 func (q *QuizMap) GatherFormHandler(w http.ResponseWriter, r *http.Request) error {
 	logrus.WithField("ip", r.RemoteAddr).Info("gathering form")
@@ -73,4 +62,47 @@ func (q *QuizMap) RootHandler(w http.ResponseWriter, r *http.Request) error {
 	http.NotFound(w, r)
 	logrus.WithField("ip", r.RemoteAddr).Info("handling root successfull")
 	return nil
+}
+
+// ErrHTTP represtents an error that can be replied to HTTP client
+type ErrHTTP struct {
+	error
+	HTTPMessage string
+	HTTPStatus  int
+}
+
+// Reply writes a response describing this error to the client
+func (e *ErrHTTP) Reply(w http.ResponseWriter) {
+	http.Error(w, e.HTTPMessage, e.HTTPStatus)
+}
+
+func HandlerWrapper(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := f(w, r)
+		if err == nil {
+			return
+		}
+
+		var errHTTP *ErrHTTP
+		if !errors.As(err, &errHTTP) {
+			errHTTP = &ErrHTTP{
+				error:       err,
+				HTTPMessage: "Internal server error",
+				HTTPStatus:  http.StatusInternalServerError,
+			}
+		}
+
+		errHTTP.Reply(w)
+		entry := logrus.WithError(errHTTP)
+		if errHTTP.HTTPStatus == http.StatusInternalServerError {
+			// add details if error is internal
+			entry.WithFields(logrus.Fields{
+				"header": r.Header,
+				"body":   r.Body,
+				"uri":    r.RequestURI,
+				"ip":     r.RemoteAddr,
+			})
+		}
+		entry.Error("handler error")
+	}
 }

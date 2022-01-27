@@ -59,8 +59,9 @@ func initServer(port string, certificate string, key string) (*http.Server, bool
 	}
 
 	server := &http.Server{
-		Addr:    ":" + port,
-		Handler: nil,
+		Addr:         ":" + port,
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
 	}
 
 	if isTLS {

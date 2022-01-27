@@ -1,11 +1,8 @@
 package quizmap
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
-
-	"github.com/sirupsen/logrus"
 )
 
 // ErrMissingFormValue represtents failure in parsing a form because required value is missing
@@ -21,36 +18,6 @@ func NewErrMissingFormValue(FormValueName string) *ErrMissingFormValue {
 }
 func (e *ErrMissingFormValue) Error() string {
 	return fmt.Sprintf("missing form value '%s'", e.FormValueName)
-}
-
-func HandlerWrapper(f func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		err := f(w, r)
-		if err == nil {
-			return
-		}
-
-		var errHTTP *ErrHTTP
-		if !errors.As(err, &errHTTP) {
-			errHTTP = &ErrHTTP{
-				error:       err,
-				HTTPMessage: "Internal server error",
-				HTTPStatus:  http.StatusInternalServerError,
-			}
-		}
-		errHTTP.Reply(w)
-		entry := logrus.WithError(errHTTP)
-		if errHTTP.HTTPStatus == http.StatusInternalServerError {
-			// add details if error is internal
-			entry.WithFields(logrus.Fields{
-				"header": r.Header,
-				"body":   r.Body,
-				"uri":    r.RequestURI,
-				"ip":     r.RemoteAddr,
-			})
-		}
-		entry.Error("handler error")
-	}
 }
 
 func parseForm(r *http.Request, required ...string) error {
