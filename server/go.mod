@@ -1,4 +1,4 @@
-module github.com/Ogurczak/moodle-utils
+module github.com/Ogurczak/moodle-utils/server
 
 go 1.16
 

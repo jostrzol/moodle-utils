@@ -1,17 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"io"
+	"io/fs"
 	"net/http"
 	"os"
+	"os/signal"
 	"strconv"
 	"time"
 
-	qm "github.com/Ogurczak/moodle-utils/quizmap"
+	qm "github.com/Ogurczak/moodle-utils/server/quizmap"
 	"github.com/sirupsen/logrus"
 )
 
@@ -43,8 +46,8 @@ func flagLogLevel(name string, defaultLevel logrus.Level, usage string) *logrus.
 
 func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string) func() {
 	return func() {
-		logrus.Info("beginning quiz map save procedure")
-		logrus.Info("opening save file")
+		logrus.Debug("beginning quiz map save procedure")
+		logrus.Debug("opening save file")
 		saveFile, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0755)
 		if err != nil {
 			logrus.WithError(err).WithField("filename", filename).
@@ -53,7 +56,7 @@ func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string)
 		}
 		defer saveFile.Close()
 
-		logrus.Info("opening backup file")
+		logrus.Debug("opening backup file")
 		bakFile, err := os.Create(bakFilename)
 		if err != nil {
 			logrus.WithError(err).WithField("bakFilename", bakFilename).
@@ -62,7 +65,7 @@ func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string)
 		}
 		defer bakFile.Close()
 
-		logrus.Info("backing up old save file")
+		logrus.Debug("backing up old save file")
 		_, err = io.Copy(bakFile, saveFile)
 		if err != nil {
 			logrus.WithError(err).WithFields(logrus.Fields{
@@ -73,7 +76,7 @@ func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string)
 		}
 		bakFile.Close()
 
-		logrus.Info("truncating save file")
+		logrus.Debug("truncating save file")
 		err = saveFile.Truncate(0)
 		if err != nil {
 			logrus.WithError(err).WithField("filename", filename).
@@ -87,7 +90,7 @@ func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string)
 			return
 		}
 
-		logrus.Info("saving")
+		logrus.Debug("saving")
 		err = quizMap.Save(saveFile)
 		if err != nil {
 			logrus.WithError(err).WithField("filename", filename).
@@ -98,14 +101,14 @@ func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string)
 	}
 }
 func tryLoadQuizMap(quizMap *qm.QuizMap, filename string) bool {
-	logrus.Info("beggining quiz map load precedure")
+	logrus.Debug("beggining quiz map load precedure")
 
-	logrus.Info("opening save file")
+	logrus.Debug("opening save file")
 	saveFile, err := os.Open(filename)
-	switch err {
-	case os.ErrNotExist:
-		logrus.Info("save file doesn't exist")
-		logrus.Info("abort quiz map load procedure")
+	switch err.(type) {
+	case *fs.PathError:
+		logrus.Warn("save file doesn't exist")
+		logrus.Debug("abort quiz map load procedure")
 		return false
 	default:
 		if err != nil {
@@ -115,7 +118,7 @@ func tryLoadQuizMap(quizMap *qm.QuizMap, filename string) bool {
 	}
 	defer saveFile.Close()
 
-	logrus.Info("decoding save file")
+	logrus.Debug("decoding save file")
 	decoder := json.NewDecoder(saveFile)
 	err = decoder.Decode(quizMap)
 	if err != nil {
@@ -146,10 +149,27 @@ func main() {
 	if *logFilename != "" {
 		initFileLogger(*logFilename, *fileLogLevel)
 	}
-	logrus.Info("initialized loggers")
+	logrus.Debug("initialized loggers")
 
 	server, isTLS := initServer(*port, *certificate, *key)
-	logrus.Info("initialized server")
+	go func() {
+		logrus.Debug("registering interrupt handler")
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt)
+		logrus.Debug("interrupt handler registered")
+		<-c
+		logrus.Debug("received interrupt signal")
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		logrus.Debug("shutting down server")
+		err := server.Shutdown(ctx)
+		if err != nil {
+			logrus.WithError(err).Fatal("server shutdown error")
+		}
+	}()
+	logrus.Debug("initialized server")
 
 	quizMap := qm.New()
 	if *saveFilename != "" {
@@ -166,13 +186,13 @@ func main() {
 			go func() {
 				for {
 					time.Sleep(*autosaveInterval)
-					logrus.Info("autosaving...")
+					logrus.Info("autosaving")
 					saveQuizMap()
 				}
 			}()
 		}
 	}
-	logrus.Info("initialized quiz map")
+	logrus.Debug("initialized quiz map")
 
 	http.HandleFunc("/", qm.HandlerWrapper(quizMap.RootHandler))
 	http.HandleFunc("/gather-form", qm.HandlerWrapper(quizMap.GatherFormHandler))
@@ -188,5 +208,7 @@ func main() {
 
 	if err != nil && !errors.Is(err, http.ErrServerClosed) {
 		logrus.WithField("error", err).Fatal("fatal server error")
+	} else {
+		logrus.Info("server shut down gracefully")
 	}
 }

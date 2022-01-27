@@ -6,3 +6,4 @@ __debug_bin
 dump
 node_modules
 tmp
+server/server
