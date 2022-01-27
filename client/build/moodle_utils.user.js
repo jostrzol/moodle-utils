@@ -65,7 +65,7 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
         }
         let url = `${base_url}/get-answers?${url_id}`;
         for (let q of questions) {
-            url += `&q=${q.text}`;
+            url += `&q=${encodeURIComponent(q.text)}`;
         }
         $.getJSON(url, function (data) {
             for (let [qtext, qdata] of Object.entries(data)) {

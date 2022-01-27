@@ -2,164 +2,101 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"flag"
-	"fmt"
-	"io"
-	"io/fs"
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
 	"time"
 
-	qm "github.com/Ogurczak/moodle-utils/server/quizmap"
+	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
-func logLevelParser(result *logrus.Level, defaultLevel logrus.Level) func(string) error {
-	return func(raw string) error {
-		if raw == "" {
-			*result = defaultLevel
-			return nil
-		} else if parsed, err := strconv.ParseUint(raw, 10, 32); err == nil {
-			if parsed <= 6 {
-				*result = logrus.Level(parsed)
-				return err
-			} else {
-				return fmt.Errorf("Log level bust be an integer in range 0..6")
-			}
-		} else {
-			parsed, err := logrus.ParseLevel(raw)
-			*result = parsed
-			return err
-		}
-	}
-}
-
-func flagLogLevel(name string, defaultLevel logrus.Level, usage string) *logrus.Level {
-	var logLevel logrus.Level
-	flag.Func(name, usage+" (0..6 or level name)", logLevelParser(&logLevel, defaultLevel))
-	return &logLevel
-}
-
-func saveQuizMapWrapper(quizMap qm.QuizMap, filename string, bakFilename string) func() {
-	return func() {
-		logrus.Debug("beginning quiz map save procedure")
-		logrus.Debug("opening save file")
-		saveFile, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE, 0755)
-		if err != nil {
-			logrus.WithError(err).WithField("filename", filename).
-				Error("cannot open save file")
-			return
-		}
-		defer saveFile.Close()
-
-		logrus.Debug("opening backup file")
-		bakFile, err := os.Create(bakFilename)
-		if err != nil {
-			logrus.WithError(err).WithField("bakFilename", bakFilename).
-				Error("cannot open backup file")
-			return
-		}
-		defer bakFile.Close()
-
-		logrus.Debug("backing up old save file")
-		_, err = io.Copy(bakFile, saveFile)
-		if err != nil {
-			logrus.WithError(err).WithFields(logrus.Fields{
-				"filename":    filename,
-				"bakFilename": bakFilename,
-			}).Error("cannot open backup old save file")
-			return
-		}
-		bakFile.Close()
-
-		logrus.Debug("truncating save file")
-		err = saveFile.Truncate(0)
-		if err != nil {
-			logrus.WithError(err).WithField("filename", filename).
-				Error("cannot truncate save file")
-			return
-		}
-		_, err = saveFile.Seek(0, 0)
-		if err != nil {
-			logrus.WithError(err).WithField("filename", filename).
-				Error("cannot truncate save file")
-			return
-		}
-
-		logrus.Debug("saving")
-		err = quizMap.Save(saveFile)
-		if err != nil {
-			logrus.WithError(err).WithField("filename", filename).
-				Error("cannot save quiz map to file")
-		} else {
-			logrus.Info("quiz map saved successfully")
-		}
-	}
-}
-func tryLoadQuizMap(quizMap *qm.QuizMap, filename string) bool {
-	logrus.Debug("beggining quiz map load precedure")
-
-	logrus.Debug("opening save file")
-	saveFile, err := os.Open(filename)
-	switch err.(type) {
-	case *fs.PathError:
-		logrus.Warn("save file doesn't exist")
-		logrus.Debug("abort quiz map load procedure")
-		return false
-	default:
-		if err != nil {
-			logrus.WithError(err).WithField("filename", filename).
-				Fatal("cannot open save file")
-		}
-	}
-	defer saveFile.Close()
-
-	logrus.Debug("decoding save file")
-	decoder := json.NewDecoder(saveFile)
-	err = decoder.Decode(quizMap)
-	if err != nil {
-		logrus.WithError(err).WithField("filename", filename).
-			Fatal("cannot decode save file")
-	}
-	logrus.Info("quiz map loaded successfully")
-
-	return true
+type ServerConfig struct {
+	port             string
+	certificate      string
+	key              string
+	autosaveInterval time.Duration
+	saveFilename     string
+	bakFilename      string
+	logFilename      string
+	consoleLogLevel  logrus.Level
+	fileLogLevel     logrus.Level
 }
 
 func main() {
-	var (
-		port             = flag.String("p", "", "port")
-		certificate      = flag.String("c", "", "tls certificate for https server (*.crt) filename")
-		key              = flag.String("k", "", "tls private key for https server (*.key) filename")
-		autosaveInterval = flag.Duration("autosave-interval", 0, "autosave interval (with unit)")
-		saveFilename     = flag.String("save-file", "", "file to save quiz map to (if empty won't save)")
-		bakFilename      = flag.String("bak-file", "", "file to backup last saved quiz map to (defaults to <save-file>.bak)")
-		logFilename      = flag.String("log-file", "", "file to save logs to (if empty won't save)")
-		consoleLogLevel  = flagLogLevel("console-log-level", logrus.WarnLevel, "log level of console")
-		fileLogLevel     = flagLogLevel("file-log-level", logrus.InfoLevel, "log level of logfile")
-	)
+	// parse arguments
+
+	config := &ServerConfig{}
+	flag.StringVar(&config.port, "p", "", "port")
+	flag.StringVar(&config.certificate, "c", "", "tls certificate for https server (*.crt) filename")
+	flag.StringVar(&config.key, "k", "", "tls private key for https server (*.key) filename")
+	flag.DurationVar(&config.autosaveInterval, "autosave-interval", 0, "autosave interval (with unit)")
+	flag.StringVar(&config.saveFilename, "save-file", "", "file to save quiz map to (if empty won't save)")
+	flag.StringVar(&config.bakFilename, "bak-file", "", "file to backup last saved quiz map to (defaults to <save-file>.bak)")
+	flag.StringVar(&config.logFilename, "log-file", "", "file to save logs to (if empty won't save)")
+	flagLogLevelVar(&config.consoleLogLevel, "console-log-level", logrus.WarnLevel, "log level of console")
+	flagLogLevelVar(&config.fileLogLevel, "file-log-level", logrus.InfoLevel, "log level of logfile")
 
 	flag.Parse()
 
-	initConsoleLogger(*consoleLogLevel)
-	if *logFilename != "" {
-		initFileLogger(*logFilename, *fileLogLevel)
+	// init loggers
+	initConsoleLogger(config)
+	if config.logFilename != "" {
+		initFileLogger(config)
 	}
-	logrus.Debug("initialized loggers")
+	logrus.Debug("loggers initialized")
 
-	server, isTLS := initServer(*port, *certificate, *key)
+	// init server
+	logrus.Debug("initializing server")
+	server, isTLS := initServer(config)
+
+	// init quiz map
+	logrus.Debug("initializing quiz map")
+
+	quizMap, save := initQuizMap(config)
+	defer save()
+
+	// init router
+	logrus.Debug("initializing router")
+
+	r := mux.NewRouter()
+
+	sWithId := r.Queries("cmid", "{cmid:[0-9]+}", "attempt", "{attempt:[0-9]+}").Subrouter()
+	sWithId.Use(injectHeaders)
+	sWithId.Use(mux.CORSMethodMiddleware(sWithId))
+	sWithId.Use(handleOptions)
+
+	sWithId.HandleFunc("/gather-form", handlerWrapper(quizMap, gatherFormHandler)).Methods(http.MethodPost, http.MethodOptions)
+	sWithId.HandleFunc("/get-answers", handlerWrapper(quizMap, getAnswersHandler)).Methods(http.MethodGet, http.MethodOptions)
+
+	http.HandleFunc("/", r.ServeHTTP)
+
+	// start server
+	cShutdown := make(chan error, 1)
+	logrus.Info("starting server")
 	go func() {
-		logrus.Debug("registering interrupt handler")
-		c := make(chan os.Signal, 1)
-		signal.Notify(c, os.Interrupt)
-		logrus.Debug("interrupt handler registered")
-		<-c
-		logrus.Debug("received interrupt signal")
+		if isTLS {
+			cShutdown <- server.ListenAndServeTLS("", "")
+		} else {
+			cShutdown <- server.ListenAndServe()
+		}
+	}()
 
+	// handling shutdown
+	logrus.Debug("registering interrupt handler")
+	cInterrupt := make(chan os.Signal, 1)
+	signal.Notify(cInterrupt, os.Interrupt)
+	logrus.Debug("interrupt handler registered")
+
+	select {
+	case err := <-cShutdown:
+		if err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logrus.WithError(err).Fatal("fatal server error")
+		}
+	case <-cInterrupt:
+		logrus.Debug("received interrupt signal")
 		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 		defer cancel()
 
@@ -168,47 +105,6 @@ func main() {
 		if err != nil {
 			logrus.WithError(err).Fatal("server shutdown error")
 		}
-	}()
-	logrus.Debug("initialized server")
-
-	quizMap := qm.New()
-	if *saveFilename != "" {
-		tryLoadQuizMap(quizMap, *saveFilename)
-
-		if *bakFilename == "" {
-			*bakFilename = *saveFilename + ".bak"
-		}
-		saveQuizMap := saveQuizMapWrapper(*quizMap, *saveFilename, *bakFilename)
-
-		defer saveQuizMap()
-		logrus.DeferExitHandler(saveQuizMap)
-		if *autosaveInterval > 0 {
-			go func() {
-				for {
-					time.Sleep(*autosaveInterval)
-					logrus.Info("autosaving")
-					saveQuizMap()
-				}
-			}()
-		}
 	}
-	logrus.Debug("initialized quiz map")
-
-	http.HandleFunc("/", qm.HandlerWrapper(quizMap.RootHandler))
-	http.HandleFunc("/gather-form", qm.HandlerWrapper(quizMap.GatherFormHandler))
-	http.HandleFunc("/get-answers", qm.HandlerWrapper(quizMap.GetAnswersHandler))
-
-	logrus.Info("starting server")
-	var err error
-	if isTLS {
-		err = server.ListenAndServeTLS("", "")
-	} else {
-		err = server.ListenAndServe()
-	}
-
-	if err != nil && !errors.Is(err, http.ErrServerClosed) {
-		logrus.WithField("error", err).Fatal("fatal server error")
-	} else {
-		logrus.Info("server shut down gracefully")
-	}
+	logrus.Info("server shut down")
 }

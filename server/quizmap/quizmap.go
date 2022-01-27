@@ -1,11 +1,5 @@
 package quizmap
 
-import (
-	"encoding/json"
-	"fmt"
-	"io"
-)
-
 type void struct{}
 
 var setMember void
@@ -72,9 +66,6 @@ func (q *QuizMap) GetAnswerCounts(quiz string, attempt string, questions []strin
 		answerCounts := questionsAnswers[question]
 		for k, v := range answerMap {
 			count := len(v)
-			// if _, exists := v[attempt]; exists {
-			// 	count -= 1
-			// }
 			if count == 0 {
 				delete(answerMap, k)
 			} else {
@@ -83,14 +74,4 @@ func (q *QuizMap) GetAnswerCounts(quiz string, attempt string, questions []strin
 		}
 	}
 	return questionsAnswers
-}
-
-func (q *QuizMap) Save(dst io.Writer) error {
-	encoder := json.NewEncoder(dst)
-	encoder.SetIndent("", "")
-	err := encoder.Encode(q)
-	if err != nil {
-		return fmt.Errorf("quiz map save: %w", err)
-	}
-	return nil
 }

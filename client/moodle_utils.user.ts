@@ -91,7 +91,7 @@ declare function MonkeyConfig(arg: any): void
         if (questions.length == 0) { questions = [...qmap.values()] }
         let url = `${base_url}/get-answers?${url_id}`
         for (let q of questions) {
-            url += `&q=${q.text}`
+            url += `&q=${encodeURIComponent(q.text)}`
         }
         $.getJSON(url, function (data: Record<string, any>) {
             for (let [qtext, qdata] of Object.entries(data)) {
