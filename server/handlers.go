@@ -72,10 +72,10 @@ func handlerWrapper(quizMap *qm.QuizMap, f QuizMapHandler) http.HandlerFunc {
 			"endpoint": r.URL.Path,
 		})
 
-		log.Info("resolving query")
+		log.Debug("resolving query")
 		err := f(w, r, quizMap)
 		if err == nil {
-			log.Info("query resolved successfully")
+			log.Debug("query resolved successfully")
 			return
 		}
 
@@ -92,7 +92,11 @@ func handlerWrapper(quizMap *qm.QuizMap, f QuizMapHandler) http.HandlerFunc {
 		errLog := log.WithError(errHTTP)
 		if errHTTP.HTTPStatus == http.StatusInternalServerError {
 			// add details if error is internal
-			errLog.WithFields(logrus.Fields{
+			err := r.ParseForm()
+			if err != nil {
+				log.WithError(err).Error("query resolve error")
+			}
+			errLog = errLog.WithFields(logrus.Fields{
 				"header":  r.Header,
 				"form":    r.Form,
 				"raw-uri": r.RequestURI,

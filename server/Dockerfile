@@ -1,16 +1,23 @@
-FROM golang:1.16.2 AS builder
-
-WORKDIR /go/src/moodle-utils
+#build stage
+FROM golang:alpine AS builder
+RUN apk add --no-cache git
+WORKDIR /go/src/server
 COPY . .
-RUN GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build
+RUN go get -d -v ./...
+RUN go build -o /go/bin/server -v
 
-FROM alpine:3.13.3
-RUN apk add --no-cache ca-certificates
-RUN addgroup -S moodle-utils && adduser -S moodle-utils -G moodle-utils
-WORKDIR /etc/moodle-utils/
-COPY --from=builder /go/src/moodle-utils/server /etc/moodle-utils/
-RUN chown moodle-utils:moodle-utils /etc/moodle-utils/
-USER moodle-utils
-
+#final stage
+FROM alpine:latest
+RUN apk --no-cache add ca-certificates
+COPY --from=builder /go/bin/server /server
+ENTRYPOINT ./server                     \
+    -p=$PORT                            \
+    -c=$CERT                            \
+    -k=$KEY                             \
+    -autosave-interval=$AUTOSAVE        \
+    -save-file=$SAVEFILE                \
+    -log-file=$LOGFILE                  \
+    -console-log-level=$CONSOLE_LOGLVL  \
+    -file-log-level=$FILE_LOGLVL        
+LABEL Name=moodle-utils-server
 EXPOSE 8080
-ENTRYPOINT ./server -p 8080 -autosave-interval=30s -save-file=server-save.json -log-file=server-log.json -console-log-level=warn -file-log-level=info

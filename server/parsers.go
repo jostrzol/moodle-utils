@@ -29,12 +29,13 @@ func logLevelParser(result *logrus.Level, defaultLevel logrus.Level) func(string
 }
 
 func flagLogLevelVar(dst *logrus.Level, name string, defaultLevel logrus.Level, usage string) {
+	*dst = defaultLevel
 	flag.Func(name, usage+" (0..6 or level name)", logLevelParser(dst, defaultLevel))
 }
 
 //nolint:deadcode,unused // This function is here to provide similar interface to flag package
 func flagLogLevel(name string, defaultLevel logrus.Level, usage string) *logrus.Level {
-	var logLevel logrus.Level
+	logLevel := defaultLevel
 	flagLogLevelVar(&logLevel, name, defaultLevel, usage)
 	return &logLevel
 }

@@ -1,0 +1,25 @@
+services:
+  server:
+    container_name: moodle-utils-server
+    build: ./server
+    ports:
+      - 8080:8080
+    environment:
+      - PORT=8080
+      - CERT=/run/secrets/cert.pem
+      - KEY=/run/secrets/key.pem
+      - AUTOSAVE=30s
+      - SAVEFILE=/etc/server.json
+      - LOGFILE=/log/server.txt
+      - CONSOLE_LOGLVL=debug
+      - FILE_LOGLVL=debug
+    volumes:
+      - ./server:/go/src/server
+    secrets:
+      - cert.pem
+      - key.pem
+secrets:
+  cert.pem:
+    file: server/tls/localhost.pem
+  key.pem:
+    file: server/tls/localhost-key.pem

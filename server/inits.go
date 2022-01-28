@@ -2,6 +2,7 @@ package main
 
 import (
 	"crypto/tls"
+	"errors"
 	"io/fs"
 	"net/http"
 	"time"
@@ -76,6 +77,7 @@ func initServer(config *ServerConfig) (*http.Server, bool) {
 		server.TLSConfig = &tls.Config{
 			Certificates: []tls.Certificate{cert},
 		}
+		logrus.Info("server will run in tls mode")
 	}
 
 	return server, isTLS
@@ -93,11 +95,10 @@ func initQuizMap(config *ServerConfig) (*qm.QuizMap, func()) {
 
 		logrus.Info("loading quiz map")
 		err := quizMap.Load(config.saveFilename)
-		switch err.(type) {
-		case *fs.PathError:
-			logEntry.Warn("save file doesnt exist - quiz map is empty")
-		case nil:
-		default:
+		switch {
+		case errors.Is(err, fs.ErrNotExist):
+			logEntry.Warn("save file doesn't exist - new blank quiz map is created")
+		case err != nil:
 			logEntry.WithError(err).Fatal("could not load quiz map")
 		}
 
@@ -106,8 +107,8 @@ func initQuizMap(config *ServerConfig) (*qm.QuizMap, func()) {
 		}
 
 		save = func() {
-			logrus.Info("saving quiz map")
 			logEntry = logEntry.WithField("bak-file", config.bakFilename)
+			logEntry.Info("saving quiz map")
 			err = quizMap.Save(config.saveFilename, config.bakFilename)
 			if err != nil {
 				// dont fatal to avoid call cycle,
