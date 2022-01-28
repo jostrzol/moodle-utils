@@ -98,6 +98,8 @@ func initQuizMap(config *ServerConfig) (*qm.QuizMap, func()) {
 		switch {
 		case errors.Is(err, fs.ErrNotExist):
 			logEntry.Warn("save file doesn't exist - new blank quiz map is created")
+		case errors.Is(err, qm.ErrFileEmpty):
+			logEntry.Warn("save file is empty - new blank quiz map is created")
 		case err != nil:
 			logEntry.WithError(err).Fatal("could not load quiz map")
 		}

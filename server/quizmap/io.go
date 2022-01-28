@@ -2,6 +2,7 @@ package quizmap
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"os"
@@ -44,6 +45,8 @@ func (q *QuizMap) Save(filename string, bakFilename string) error {
 	return nil
 }
 
+var ErrFileEmpty = errors.New("the file is empty")
+
 func (q *QuizMap) Load(filename string) error {
 	saveFile, err := os.Open(filename)
 	if err != nil {
@@ -54,7 +57,15 @@ func (q *QuizMap) Load(filename string) error {
 	decoder := json.NewDecoder(saveFile)
 	err = decoder.Decode(q)
 	if err != nil {
-		return fmt.Errorf("load: cannot decode save file: %w", err)
+		offset, errSeek := saveFile.Seek(0, io.SeekCurrent)
+		switch {
+		case offset == 0 && errSeek == nil:
+			return fmt.Errorf("load: %w", ErrFileEmpty)
+		case errSeek != nil:
+			return fmt.Errorf("load: seek 0: %w", errSeek)
+		default:
+			return fmt.Errorf("load: cannot decode save file: %w", err)
+		}
 	}
 	return nil
 }
