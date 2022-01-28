@@ -303,7 +303,7 @@ declare function MonkeyConfig(arg: any): void
 
     Y.on("domready", function () {
         add_style()
-        if ($(".qnbutton.notyetanswered").length != 0) {
+        if ($(".qnbutton.notyetanswered").length != 0 && M.mod_quiz.timer?.endtime != 0) {
             new ImprovedTimer(M.mod_quiz.timer)
         }
 

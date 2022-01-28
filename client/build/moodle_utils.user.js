@@ -4,7 +4,7 @@
 // @description     Displays time per question left
 // @version         0.7.1
 // @namespace       https://github.com/Ogurczak/
-// @updateURL       https://github.com/Ogurczak/moodle-utils/raw/develop/client/build/moodle_utils.user.js
+// @updateURL       https://github.com/Ogurczak/moodle-utils/raw/{{pre-push:branch}}/client/build/moodle_utils.user.js
 // @match           https://*/mod/quiz/attempt*
 // @match           https://*/mod/quiz*
 // @match           https://github.com/Ogurczak/moodle-utils*
@@ -14,7 +14,7 @@
 // @grant           GM_setValue
 // @grant           GM_registerMenuCommand
 // @grant           GM_getResourceText
-// @resource        css https://raw.githubusercontent.com/Ogurczak/moodle-utils/develop/client/style.css
+// @resource        css https://raw.githubusercontent.com/Ogurczak/moodle-utils/{{pre-push:branch}}/client/style.css
 // @require         https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
 // @require         http://code.jquery.com/jquery-3.4.1.min.js
 // ==/UserScript==
@@ -253,8 +253,9 @@ var __classPrivateFieldGet = (this && this.__classPrivateFieldGet) || function (
     if (!enable_regex.test(window.location.href))
         return;
     Y.on("domready", function () {
+        var _a;
         add_style();
-        if ($(".qnbutton.notyetanswered").length != 0) {
+        if ($(".qnbutton.notyetanswered").length != 0 && ((_a = M.mod_quiz.timer) === null || _a === void 0 ? void 0 : _a.endtime) != 0) {
             new ImprovedTimer(M.mod_quiz.timer);
         }
         if (base_url == "") {
