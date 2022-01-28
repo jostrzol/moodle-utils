@@ -4,7 +4,7 @@
 // @description     Displays time per question left
 // @version         0.7.1
 // @namespace       https://github.com/Ogurczak/
-// @updateURL       https://github.com/Ogurczak/moodle-utils/raw/develop/client/build/moodle_utils.user.js
+// @updateURL       https://github.com/Ogurczak/moodle-utils/raw/main/client/build/moodle_utils.user.js
 // @match           https://*/mod/quiz/attempt*
 // @match           https://*/mod/quiz*
 // @match           https://github.com/Ogurczak/moodle-utils*
