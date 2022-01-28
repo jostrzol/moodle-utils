@@ -19,5 +19,4 @@ ENTRYPOINT ./server                     \
     -log-file=$LOGFILE                  \
     -console-log-level=$CONSOLE_LOGLVL  \
     -file-log-level=$FILE_LOGLVL        
-LABEL Name=moodle-utils-server
 EXPOSE 8080
