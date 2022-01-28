@@ -3,29 +3,31 @@
 # This hook builds the client typescript and replaces {{pre-push:branch}}
 # in every build file with the destination branch
 
-# do nothing if userscript unchanged
-if ! git ls-files -m | grep -e '^client/moodle_utils\.user\.ts$'; then
-	exit 0
-fi
+src_userscript="client/moodle_utils.user.ts"
+tsconfig="client/tsconfig.json"
+out_userscript="client/build/moodle_utils.user.js"
 
 # shellcheck disable=SC2034
 while read -r local_ref local_sha remote_ref remote_sha
 do
-	# build
-	repo_root=$(git rev-parse --show-toplevel)
-	cd "$repo_root/client" || exit 1
-	tsc || exit 1
+	# do nothing if userscript unchanged
+	if git diff --quiet "$local_sha" "$remote_sha" -- $src_userscript ; then
+		continue
+	fi
+	echo "pre-push: change to $src_userscript detected" >&2
 
-	# navigate to build dir
-	out_dir=$(tsc --showConfig | grep -oP '(?<="outDir": ")[^"]*' || echo .)
-	cd "$out_dir" || exit 2
+
+	# build
+	echo "pre-push: building $tsconfig" >&2
+	tsc -p "$tsconfig" || exit 1
 
 	# substitute {{pre-push:branch}}
+	echo "pre-push: substitute in $out_userscript: {{pre-push:branch}} -> <remote-branch-name>" >&2
 	branch=$(echo "$remote_ref" | cut -d / -f 3)
-	sed -i -e "s/{{pre-push:branch}}/$branch/g" -- *.user.js || exit 3
+	sed -i -e "s/{{pre-push:branch}}/$branch/g" -- "$out_userscript" || exit 2
 
-	git add . || exit 4
-	git commit -m "substituted {{pre-push:branch}} with branch name" || exit 5
+	echo "pre-push: amending last commit" >&2
+	(git add . && git commit --amend --no-edit) || exit 3
 done
 
 exit 0
