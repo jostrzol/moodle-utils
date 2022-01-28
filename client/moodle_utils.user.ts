@@ -2,7 +2,7 @@
 // @name            Moodle Utils
 // @author          Ogurczak
 // @description     Displays time per question left
-// @version         0.8
+// @version         0.7.1
 // @namespace       https://github.com/Ogurczak/
 // @updateURL       https://github.com/Ogurczak/moodle-utils/raw/{{pre-push:branch}}/client/build/moodle_utils.user.js
 // @match           https://*/mod/quiz/attempt*
