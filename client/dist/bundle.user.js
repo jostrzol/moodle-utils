@@ -13,7 +13,6 @@
 // @author      Ogurczak
 // @license     MIT
 // @grant       GM_getValue
-// @grant       GM_addStyle
 // @grant       GM_setValue
 // @grant       GM_registerMenuCommand
 // ==/UserScript==

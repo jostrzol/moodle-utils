@@ -3,6 +3,6 @@ This tampermonkey user script is intended as utility for moodle quizes.
 
 ## Installation
 1. Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo "Tampermonkey in Google Chrome store").
-1. Click [this link](https://github.com/Ogurczak/moodle-utils/raw/main/client/build/moodle_utils.user.js "Install Moodle Utils") to get the extension installed.  
-    Alternatively right-click the Tampermonkey icon in the extensions tab and click options, then goto **Utilities** > **Install from URL** and copy this link and click **Install**: `https://github.com/Ogurczak/moodle-utils/raw/main/client/build/moodle_utils.user.js`.
+1. Click [this link](https://github.com/Ogurczak/moodle-utils/raw/main/client/dist/bundle.user.js "Install Moodle Utils") to get the extension installed.  
+    Alternatively right-click the Tampermonkey icon in the extensions tab and click options, then goto **Utilities** > **Install from URL** and copy this link and click **Install**: `https://github.com/Ogurczak/moodle-utils/raw/main/client/dist/bundle.user.js`.
 1. The extension should be ready now.

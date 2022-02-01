@@ -14,7 +14,6 @@
 // @license     MIT
 // @connect     localhost
 // @grant       GM_getValue
-// @grant       GM_addStyle
 // @grant       GM_setValue
 // @grant       GM_registerMenuCommand
 // @grant       GM_xmlhttpRequest
