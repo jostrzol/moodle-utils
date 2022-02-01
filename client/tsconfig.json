@@ -2,14 +2,21 @@
     "compileOnSave": true,
     "compilerOptions": {
         "downlevelIteration": true,
-        // "baseUrl": "./",
-        "outDir": "./build",
-        // "sourceMap": true,
+        "outDir": "./dist",
+        "baseUrl": "./src",
+        "sourceMap": true,
         "declaration": false,
-        "module": "es2020",
+        "module": "system",
         "moduleResolution": "Node",
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
+        "allowJs": true,
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "forceConsistentCasingInFileNames": true,
+        "noFallthroughCasesInSwitch": true,
         "target": "ES6",
         "typeRoots": [
             "node_modules/@types"
@@ -19,5 +26,5 @@
             "ESNext",
             "dom"
         ]
-    }
+    },
 }

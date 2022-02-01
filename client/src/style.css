@@ -1,0 +1,58 @@
+.moodleutils {
+    color: grey
+}
+
+/* ANSWERS */
+
+.moodleutils .answercounter {
+    float: right;
+}
+
+.moodleutils .topshortanswers {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+
+.moodleutils .topshortanswer {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+
+.moodleutils .topshortanswercontent {
+    width: -webkit-fill-available;
+}
+
+/* TIMER */
+
+.moodleutils .perquestion {
+    color: black
+}
+
+.moodleutils .timerperquestion {
+    font-weight: 700;
+    color: black
+}
+
+/* SERVER STATUS */
+
+.moodleutils .status::after {
+    content: "???";
+    float: right;
+}
+
+.moodleutils .status .unknown::after {
+    content: "???";
+    float: right;
+}
+
+.moodleutils .status .ok::after {
+    content: "OK";
+    color: hsla(120, 100%, 41%, 0.75);
+}
+
+.moodleutils .status .failed::after {
+    content: "FAILED";
+    color: hsla(0, 100%, 54%, 0.75);
+}
