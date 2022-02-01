@@ -5,22 +5,23 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"runtime/debug"
 
 	qm "github.com/Ogurczak/moodle-utils/server/quizmap"
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 )
 
-type QuizMapHandler func(http.ResponseWriter, *http.Request, *qm.QuizMap) error
+type QuizMapHandler func(http.ResponseWriter, *http.Request, qm.QuizMap) error
 
-func gatherFormHandler(w http.ResponseWriter, r *http.Request, quizMap *qm.QuizMap) error {
+func gatherFormHandler(w http.ResponseWriter, r *http.Request, quizMap qm.QuizMap) error {
 	vars := mux.Vars(r)
 	err := r.ParseForm()
 	if err != nil {
 		return fmt.Errorf("gatherFormHandler: parse form: %w", err)
 	}
 
-	var answers map[string][]string
+	var answers map[string]interface{}
 	d := json.NewDecoder(r.Body)
 	err = d.Decode(&answers)
 	if err != nil {
@@ -32,19 +33,26 @@ func gatherFormHandler(w http.ResponseWriter, r *http.Request, quizMap *qm.QuizM
 	}
 
 	for k, v := range answers {
-		quizMap.UpdateAnswer(vars["cmid"], k, v, vars["attempt"])
+		err := quizMap.UpdateAnswer(vars["cmid"], vars["attempt"], k, v)
+		if err != nil {
+			return &ErrHTTP{
+				error:       fmt.Errorf("gatherFormHandler: update answer: %w", err),
+				HTTPMessage: "malformed answer map passed",
+				HTTPStatus:  http.StatusBadRequest,
+			}
+		}
 	}
 	return nil
 }
 
-func getAnswersHandler(w http.ResponseWriter, r *http.Request, quizMap *qm.QuizMap) error {
+func getAnswersHandler(w http.ResponseWriter, r *http.Request, quizMap qm.QuizMap) error {
 	vars := mux.Vars(r)
 	err := r.ParseForm()
 	if err != nil {
 		return fmt.Errorf("getAnswersHandler: parse form: %w", err)
 	}
 
-	questionsAnswers := quizMap.GetAnswerCounts(vars["cmid"], vars["attempt"], r.Form["q"])
+	questionsAnswers := quizMap.GetAnswerCounts(vars["cmid"], r.Form["q"])
 	encoder := json.NewEncoder(w)
 	err = encoder.Encode(questionsAnswers)
 	if err != nil {
@@ -65,17 +73,39 @@ func (e *ErrHTTP) Reply(w http.ResponseWriter) {
 	http.Error(w, e.HTTPMessage, e.HTTPStatus)
 }
 
-func handlerWrapper(quizMap *qm.QuizMap, f QuizMapHandler) http.HandlerFunc {
+func withRequestDetails(log *logrus.Entry, r *http.Request) *logrus.Entry {
+	log = log.WithFields(logrus.Fields{
+		"raw-uri": r.RequestURI,
+		"header":  r.Header,
+	})
+	err := r.ParseForm()
+	if err != nil {
+		log.WithError(err).Error("request parse form error")
+	}
+	return log.WithField("form", r.Form)
+}
+
+func handlerWrapper(quizMap qm.QuizMap, f QuizMapHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log := logrus.WithFields(logrus.Fields{
 			"ip":       r.RemoteAddr,
 			"endpoint": r.URL.Path,
 		})
 
-		log.Debug("resolving query")
+		log.Debug("resolving request")
+		defer func() {
+			if err := recover(); err != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				errLog := withRequestDetails(log, r)
+				if errReal, ok := err.(error); ok {
+					errLog = errLog.WithError(errReal)
+				}
+				errLog.Errorf("PANIC during request reselvement!: %v\nstacktrace: %s\n", err, debug.Stack())
+			}
+		}()
 		err := f(w, r, quizMap)
 		if err == nil {
-			log.Debug("query resolved successfully")
+			log.Debug("request resolved successfully")
 			return
 		}
 
@@ -92,17 +122,9 @@ func handlerWrapper(quizMap *qm.QuizMap, f QuizMapHandler) http.HandlerFunc {
 		errLog := log.WithError(errHTTP)
 		if errHTTP.HTTPStatus == http.StatusInternalServerError {
 			// add details if error is internal
-			err := r.ParseForm()
-			if err != nil {
-				log.WithError(err).Error("query resolve error")
-			}
-			errLog = errLog.WithFields(logrus.Fields{
-				"header":  r.Header,
-				"form":    r.Form,
-				"raw-uri": r.RequestURI,
-			})
+			errLog = withRequestDetails(errLog, r)
 		}
-		errLog.Error("handler error")
+		errLog.Errorf("request resolvement error")
 	}
 }
 

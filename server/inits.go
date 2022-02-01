@@ -86,8 +86,8 @@ func initServer(config *ServerConfig) (*http.Server, bool) {
 // initQuizMap initializes QuizMap, enables autosave and registers
 // logrus defer exit handler to save the QuizMap
 // returns the QuizMap and function for saving the QuizMap
-func initQuizMap(config *ServerConfig) (*qm.QuizMap, func()) {
-	quizMap := qm.New()
+func initQuizMap(config *ServerConfig) (qm.QuizMap, func()) {
+	quizMap := qm.QuizMap{}
 	save := func() {}
 
 	if config.saveFilename != "" {
