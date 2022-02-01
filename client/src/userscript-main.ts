@@ -1,10 +1,29 @@
-import "+Header";
-import Connection from "Connection";
-import { GM_addStyle, GM_getResourceText, M, Y } from "ExternalTypes";
-import ImprovedTimer from "ImprovedTimer";
-import MoodleUtilsConfig from "MoodleUtilsConfig";
-import { QuestionMap } from "questions/QuestionMap";
-import ServerStatusBar from "ServerStatusBar";
+// ==UserScript==
+// @name            Moodle Utils
+// @author          Ogurczak
+// @description     Displays time per question left
+// @version         0.7.2
+// @namespace       https://github.com/Ogurczak/
+// @updateURL       https://github.com/Ogurczak/moodle-utils/raw/main/client/dist/script.user.js
+// @match           https://*/mod/quiz/attempt*
+// @match           https://*/mod/quiz*
+// @match           https://github.com/Ogurczak/moodle-utils*
+// @match           https://*.moodlecloud.com/*
+// @grant           GM_addStyle
+// @grant           GM_getValue
+// @grant           GM_setValue
+// @grant           GM_registerMenuCommand
+// @grant           GM_getResourceText
+// @resource        css https://raw.githubusercontent.com/Ogurczak/moodle-utils/{{pre-push:branch}}/client/resources/style.css
+// @require         https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
+// @require         http://code.jquery.com/jquery-3.4.1.min.js
+// ==/UserScript==
+
+import Connection from "connection";
+import ImprovedTimer from "improved-timer";
+import MoodleUtilsConfig from "moodle-utils-config";
+import ServerStatusBar from "server-status-bar";
+import { QuestionMap } from "./questions/question-map";
 
 (function () {
     'use strict';
@@ -23,7 +42,8 @@ import ServerStatusBar from "ServerStatusBar";
         GM_addStyle(GM_getResourceText('css'))
 
         // add timer
-        if ($(".qnbutton.notyetanswered").length != 0 && M.mod_quiz.timer?.endtime != 0)
+        if ($(".qnbutton.notyetanswered").length != 0
+            && M.mod_quiz.timer.endtime != 0)
             new ImprovedTimer(M.mod_quiz.timer)
 
         // return if no server address

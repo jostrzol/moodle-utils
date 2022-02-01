@@ -1,31 +1,29 @@
 {
-  "name": "moodle-utils",
-  "version": "0.7.2",
-  "description": "Displays time per question left",
-  "private": "true",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/Ogurczak/moodle-utils.git"
-  },
-  "keywords": [
-    "moodle",
-    "utils"
-  ],
-  "author": "Ogurczak",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Ogurczak/moodle-utils/issues"
-  },
-  "homepage": "https://github.com/Ogurczak/moodle-utils#readme",
   "devDependencies": {
-    "ts-loader": "^9.2.6",
-    "webpack": "^5.68.0",
-    "webpack-cli": "^4.9.2"
+    "@babel/plugin-proposal-class-properties": "^7.16.7",
+    "@babel/plugin-proposal-object-rest-spread": "^7.16.7",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/jquery": "^3.5.13",
+    "@types/node": "^10.12.18",
+    "@types/terser-webpack-plugin": "^1.2.1",
+    "@types/webpack": "^4.4.23",
+    "cross-env": "^5.2.1",
+    "ts-loader": "^5.3.3",
+    "ts-node": "^7.0.1",
+    "tsconfig-paths": "^3.8.0",
+    "typescript": "^3.4.0",
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.1"
+  },
+  "scripts": {
+    "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack",
+    "build-dev": "npm run build -- --mode development",
+    "build-clip": "npm run build && npm run content-to-clipboard",
+    "build-clip-dev": "npm run build-dev && npm run content-to-clipboard",
+    "content-to-clipboard": "clip < dist/script.user.js"
   },
   "dependencies": {
-    "@types/jquery": "^3.5.13"
+    "rxjs": "^6.5.1"
   }
 }

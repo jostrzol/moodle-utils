@@ -1,4 +1,4 @@
-import Question from "questions/Question"
+import Question from "./questions/question"
 
 type MoodleUtilsEndpoints = "gather-form" | "get-answers"
 

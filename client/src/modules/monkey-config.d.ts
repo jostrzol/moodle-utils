@@ -1,5 +1,5 @@
 // YUI
-export declare namespace YUI {
+declare namespace YUI {
     interface status {
         msg: string,
         success: boolean
@@ -12,14 +12,10 @@ export declare namespace YUI {
     }
 }
 
-export declare var Y: YUI.Y
-
-// GM
-export declare function GM_addStyle(css: string): void
-export declare function GM_getResourceText(resource: string): string
+declare var Y: YUI.Y
 
 // Moodle
-export declare namespace Moodle {
+declare namespace Moodle {
     interface Timer {
         update: Function
         endtime: number
@@ -31,10 +27,10 @@ export declare namespace Moodle {
         mod_quiz: ModQuiz
     }
 }
-export declare var M: Moodle.Moodle
+declare var M: Moodle.Moodle
 
 // MonkeyConfig
-export declare class MonkeyConfig {
+declare class MonkeyConfig {
     constructor(config: any)
-    public get(param: string)
+    public get(param: string): string
 }

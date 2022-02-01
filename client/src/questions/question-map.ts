@@ -1,5 +1,5 @@
-import Connection from "Connection";
-import Question from "./Question";
+import Connection from "connection";
+import Question from "./question";
 
 export class QuestionMap extends Map<string, Question>{
     connection: Connection

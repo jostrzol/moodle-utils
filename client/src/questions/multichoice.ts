@@ -1,6 +1,6 @@
-import Connection from "Connection"
-import MoodleUtilsElem from "MoodleUtilsElem"
-import Question from "./Question"
+import Connection from "connection"
+import MoodleUtilsElem from "moodle-utils-elem"
+import Question from "./question"
 
 export default class QuestionMultichoice extends Question {
     #counts = new Map<string, HTMLSpanElement>()
@@ -11,7 +11,7 @@ export default class QuestionMultichoice extends Question {
             let label = $("~ .d-flex", input)
 
             let counter = MoodleUtilsElem("<span>").addClass("answercounter").text(0).appendTo(label)[0]
-            let answerText = $("div.flex-fill", label).text().replaceAll("\n", "")
+            let answerText = $("div.flex-fill", label).text()
 
             this.#counts.set(answerText, counter)
             this.#inputs.set(input, answerText)
@@ -20,11 +20,11 @@ export default class QuestionMultichoice extends Question {
         let cancel = $(".qtype_multichoice_clearchoice a", htmlElement)[0]
         // no cancel in multichoice with multiple answers
         if (cancel) {
-            $(htmlElement).on('change', (this.#onChangeRadio).bind(this))
-            $(cancel).on('click', (this.#onCancel).bind(this))
+            $(htmlElement).on('change', this.#onChangeRadio)
+            $(cancel).on('click', this.#onCancel)
             $("[value!=-1]:radio:checked", htmlElement).trigger('change') // send initial value
         } else {
-            $(htmlElement).on('change', (this.#onChangeMultichoice).bind(this))
+            $(htmlElement).on('change', this.#onChangeMultichoice)
             $(":checkbox:checked", htmlElement).trigger('change') // send initial value
         }
     }

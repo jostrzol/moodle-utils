@@ -1,6 +1,6 @@
-import Connection from "Connection"
-import OnHTMLElement from "OnHTMLElement"
-import Question from "./Question"
+import Connection from "connection"
+import OnHTMLElement from "on-html-element"
+import Question from "./question"
 
 export class Option extends OnHTMLElement {
     parent: GapSelectPlace

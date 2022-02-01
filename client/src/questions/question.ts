@@ -1,8 +1,8 @@
-import Connection from "Connection"
-import OnHTMLElement from "OnHTMLElement"
-import QuestionMultichoice from "./Multichoice"
-import QuestionShortAnswer from "./ShortAnswer"
-import QuestionTrueFalse from "./TrueFalse"
+import Connection from "connection"
+import OnHTMLElement from "on-html-element"
+import QuestionMultichoice from "./multichoice"
+import QuestionShortAnswer from "./short-answer"
+import QuestionTrueFalse from "./true-false"
 
 export default abstract class Question extends OnHTMLElement {
     #text: string

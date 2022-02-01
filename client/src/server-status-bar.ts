@@ -1,4 +1,4 @@
-import MoodleUtilsElem from "MoodleUtilsElem";
+import MoodleUtilsElem from "moodle-utils-elem";
 
 type ServerStatus = "ok" | "failed" | "unknown"
 

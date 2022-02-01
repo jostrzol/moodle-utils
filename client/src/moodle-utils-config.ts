@@ -1,5 +1,3 @@
-import { MonkeyConfig } from "ExternalTypes";
-
 export default class MoodleUtilsConfig {
     #config: MonkeyConfig
 

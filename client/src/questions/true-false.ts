@@ -1,7 +1,7 @@
-import Connection from "Connection"
-import MoodleUtilsElem from "MoodleUtilsElem"
-import OnHTMLElement from "OnHTMLElement"
-import Question from "./Question"
+import Connection from "connection"
+import MoodleUtilsElem from "moodle-utils-elem"
+import OnHTMLElement from "on-html-element"
+import Question from "./question"
 
 export default class QuestionTrueFalse extends Question {
     #trueCount: HTMLSpanElement
@@ -34,7 +34,7 @@ export default class QuestionTrueFalse extends Question {
         this.#falseCount = falseCount
 
 
-        $(htmlElement).on('change', (this.#onChange).bind(this))
+        $(htmlElement).on('change', this.#onChange)
         $(":radio:checked", htmlElement).trigger('change') // send initial value
     }
 

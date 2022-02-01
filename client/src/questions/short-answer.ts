@@ -1,6 +1,6 @@
-import Connection from "Connection"
-import MoodleUtilsElem from "MoodleUtilsElem"
-import Question from "./Question"
+import Connection from "connection"
+import MoodleUtilsElem from "moodle-utils-elem"
+import Question from "./question"
 
 export default class QuestionShortAnswer extends Question {
     #top: HTMLDivElement
@@ -21,7 +21,7 @@ export default class QuestionShortAnswer extends Question {
             MoodleUtilsElem('<div>').addClass("answercounter").appendTo(a)
         }
 
-        $(htmlElement).on('change', (this.#onChange).bind(this))
+        $(htmlElement).on('change', this.#onChange)
         $(":text", htmlElement).on('keypress', e => {
             if (e.key == "Enter")
                 this.#onChange(e)
