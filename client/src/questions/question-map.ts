@@ -35,14 +35,17 @@ export class QuestionMap extends Map<string, Question>{
     // utility function for quick question creation
     #create(htmlElement: HTMLElement, connection: Connection): Question | null {
         const classes = htmlElement.classList
-        if ("multichoice" in classes) {
-            return new QuestionMultichoice(htmlElement, connection)
-        } else if ("truefalse" in classes) {
-            return new QuestionTrueFalse(htmlElement, connection)
-        } else if ("shortanswer" in classes) {
-            return new QuestionShortAnswer(htmlElement, connection)
-        } else if ("gapselect" in classes) {
-            return new QuestionGapSelect(htmlElement, connection)
+        for (const className of classes) {
+            switch (className) {
+                case "multichoice":
+                    return new QuestionMultichoice(htmlElement, connection)
+                case "truefalse":
+                    return new QuestionTrueFalse(htmlElement, connection)
+                case "shortanswer":
+                    return new QuestionShortAnswer(htmlElement, connection)
+                case "gapselect":
+                    return new QuestionGapSelect(htmlElement, connection)
+            }
         }
         return null
     }

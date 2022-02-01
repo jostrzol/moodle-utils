@@ -10,7 +10,8 @@ export default class ServerStatusBar {
         this.#element = MoodleUtilsElem('<div>')
             .text("Moodle Utils server status: ")
             .addClass("status unknown")
-        this.#element.appendTo(parent)
+            .append("<hr/>")
+        this.#element.prependTo(parent)
     }
 
     set status(newStatus: ServerStatus) {

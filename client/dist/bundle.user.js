@@ -21,7 +21,7 @@
 /*
 MIT License
 
-Copyright (c) 2020 cvzi
+Copyright (c) 2022 Ogurczak
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -251,7 +251,7 @@ SOFTWARE.
                 throw new OnHTMLElement.ConstructionError(htmlElement, `GapSelectPlace: no name (class matching ${matcher})`);
             }
             __classPrivateFieldSet(this, _GapSelectPlace_name, name, "f");
-            $(htmlElement).on("change", __classPrivateFieldGet(this, _GapSelectPlace_instances, "m", _GapSelectPlace_onChange));
+            $(htmlElement).on("change", (__classPrivateFieldGet(this, _GapSelectPlace_instances, "m", _GapSelectPlace_onChange)).bind(this));
         }
         update(data) {
             for (const [optionName, option] of __classPrivateFieldGet(this, _GapSelectPlace_options, "f")) {
@@ -293,6 +293,9 @@ SOFTWARE.
             _QuestionGapSelect_places.set(this, new Map());
             $("select", htmlElement)
                 .each((_, p) => { __classPrivateFieldGet(this, _QuestionGapSelect_instances, "m", _QuestionGapSelect_addPlace).call(this, p); });
+            MoodleUtilsElem("<div>").addClass("moodleutils-info")
+                .text("(numbers in brackets show answer counts)")
+                .prependTo($(".formulation", htmlElement));
         }
         static extractText(htmlElement) {
             return $(".qtext", htmlElement).clone().find(".control").remove().end().text();
@@ -326,12 +329,12 @@ SOFTWARE.
             let cancel = $(".qtype_multichoice_clearchoice a", htmlElement)[0];
             // no cancel in multichoice with multiple answers
             if (cancel) {
-                $(htmlElement).on('change', __classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeRadio));
-                $(cancel).on('click', __classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onCancel));
+                $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeRadio)).bind(this));
+                $(cancel).on('click', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onCancel)).bind(this));
                 $("[value!=-1]:radio:checked", htmlElement).trigger('change'); // send initial value
             }
             else {
-                $(htmlElement).on('change', __classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeMultichoice));
+                $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeMultichoice)).bind(this));
                 $(":checkbox:checked", htmlElement).trigger('change'); // send initial value
             }
         }
@@ -376,7 +379,7 @@ SOFTWARE.
                 MoodleUtilsElem('<div>').addClass("topshortanswercontent").appendTo(a);
                 MoodleUtilsElem('<div>').addClass("answercounter").appendTo(a);
             }
-            $(htmlElement).on('change', __classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_onChange));
+            $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_onChange)).bind(this));
             $(":text", htmlElement).on('keypress', e => {
                 if (e.key == "Enter")
                     __classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_onChange).call(this, e);
@@ -434,7 +437,7 @@ SOFTWARE.
             }
             __classPrivateFieldSet(this, _QuestionTrueFalse_trueCount, trueCount, "f");
             __classPrivateFieldSet(this, _QuestionTrueFalse_falseCount, falseCount, "f");
-            $(htmlElement).on('change', __classPrivateFieldGet(this, _QuestionTrueFalse_instances, "m", _QuestionTrueFalse_onChange));
+            $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionTrueFalse_instances, "m", _QuestionTrueFalse_onChange)).bind(this));
             $(":radio:checked", htmlElement).trigger('change'); // send initial value
         }
         update(data) {
@@ -477,17 +480,17 @@ SOFTWARE.
     }
     _QuestionMap_instances = new WeakSet(), _QuestionMap_create = function _QuestionMap_create(htmlElement, connection) {
         const classes = htmlElement.classList;
-        if ("multichoice" in classes) {
-            return new QuestionMultichoice(htmlElement, connection);
-        }
-        else if ("truefalse" in classes) {
-            return new QuestionTrueFalse(htmlElement, connection);
-        }
-        else if ("shortanswer" in classes) {
-            return new QuestionShortAnswer(htmlElement, connection);
-        }
-        else if ("gapselect" in classes) {
-            return new QuestionGapSelect(htmlElement, connection);
+        for (const className of classes) {
+            switch (className) {
+                case "multichoice":
+                    return new QuestionMultichoice(htmlElement, connection);
+                case "truefalse":
+                    return new QuestionTrueFalse(htmlElement, connection);
+                case "shortanswer":
+                    return new QuestionShortAnswer(htmlElement, connection);
+                case "gapselect":
+                    return new QuestionGapSelect(htmlElement, connection);
+            }
         }
         return null;
     };
@@ -499,8 +502,9 @@ SOFTWARE.
             _ServerStatusBar_status.set(this, "unknown");
             __classPrivateFieldSet(this, _ServerStatusBar_element, MoodleUtilsElem('<div>')
                 .text("Moodle Utils server status: ")
-                .addClass("status unknown"), "f");
-            __classPrivateFieldGet(this, _ServerStatusBar_element, "f").appendTo(parent);
+                .addClass("status unknown")
+                .append("<hr/>"), "f");
+            __classPrivateFieldGet(this, _ServerStatusBar_element, "f").prependTo(parent);
         }
         set status(newStatus) {
             __classPrivateFieldGet(this, _ServerStatusBar_element, "f").removeClass(this.status);
@@ -539,7 +543,7 @@ SOFTWARE.
       }
     }
 
-    var css = ".moodleutils {\n    color: grey\n}\n\n/* ANSWERS */\n\n.moodleutils .answercounter {\n    float: right;\n}\n\n.moodleutils .topshortanswers {\n    display: flex;\n    flex-direction: column;\n    flex-wrap: nowrap;\n}\n\n.moodleutils .topshortanswer {\n    display: flex;\n    flex-direction: row;\n    flex-wrap: nowrap;\n}\n\n.moodleutils .topshortanswercontent {\n    width: -webkit-fill-available;\n}\n\n/* TIMER */\n\n.moodleutils .perquestion {\n    color: black\n}\n\n.moodleutils .timerperquestion {\n    font-weight: 700;\n    color: black\n}\n\n/* SERVER STATUS */\n\n.moodleutils .status::after {\n    content: \"???\";\n    float: right;\n}\n\n.moodleutils .status .unknown::after {\n    content: \"???\";\n    float: right;\n}\n\n.moodleutils .status .ok::after {\n    content: \"OK\";\n    color: hsla(120, 100%, 41%, 0.75);\n}\n\n.moodleutils .status .failed::after {\n    content: \"FAILED\";\n    color: hsla(0, 100%, 54%, 0.75);\n}";
+    var css = ".moodleutils {\n    color: grey\n}\n\n/* ANSWERS */\n\n.moodleutils.answercounter {\n    float: right;\n}\n\n.moodleutils.topshortanswers {\n    display: flex;\n    flex-direction: column;\n    flex-wrap: nowrap;\n}\n\n.moodleutils.topshortanswer {\n    display: flex;\n    flex-direction: row;\n    flex-wrap: nowrap;\n}\n\n.moodleutils.topshortanswercontent {\n    width: -webkit-fill-available;\n}\n\n.moodleutils.moodleutils-info {\n    font-style: italic;\n    margin-bottom: 1em;\n}\n\n/* TIMER */\n\n.moodleutils.perquestion {\n    color: black\n}\n\n.moodleutils.timerperquestion {\n    font-weight: 700;\n    color: black\n}\n\n/* SERVER STATUS */\n\n.moodleutils.status::before {\n    content: \"???\";\n    float: right;\n}\n\n.moodleutils.status.unknown::before {\n    content: \"???\";\n    float: right;\n}\n\n.moodleutils.status.ok::before {\n    content: \"OK\";\n    color: hsla(120, 100%, 41%, 0.75);\n}\n\n.moodleutils.status.failed::before {\n    content: \"FAILED\";\n    color: hsla(0, 100%, 54%, 0.75);\n}";
     n(css,{});
 
     (function () {
@@ -568,8 +572,9 @@ SOFTWARE.
             // create current page's question map
             const qmap = new QuestionMap(document.body, conn);
             // refresh question map every second
+            qmap.updateAll();
             if (qmap.size != 0) {
-                window.setInterval(() => qmap.updateAll, 1000);
+                window.setInterval((qmap.updateAll).bind(qmap), 1000);
             }
         });
     })();

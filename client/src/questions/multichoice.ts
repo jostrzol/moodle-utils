@@ -20,11 +20,11 @@ export default class QuestionMultichoice extends Question {
         let cancel = $(".qtype_multichoice_clearchoice a", htmlElement)[0]
         // no cancel in multichoice with multiple answers
         if (cancel) {
-            $(htmlElement).on('change', this.#onChangeRadio)
-            $(cancel).on('click', this.#onCancel)
+            $(htmlElement).on('change', (this.#onChangeRadio).bind(this))
+            $(cancel).on('click', (this.#onCancel).bind(this))
             $("[value!=-1]:radio:checked", htmlElement).trigger('change') // send initial value
         } else {
-            $(htmlElement).on('change', this.#onChangeMultichoice)
+            $(htmlElement).on('change', (this.#onChangeMultichoice).bind(this))
             $(":checkbox:checked", htmlElement).trigger('change') // send initial value
         }
     }

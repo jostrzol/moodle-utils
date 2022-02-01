@@ -42,8 +42,9 @@ import './style.css';
         const qmap = new QuestionMap(document.body, conn)
 
         // refresh question map every second
+        qmap.updateAll()
         if (qmap.size != 0) {
-            window.setInterval(() => qmap.updateAll, 1000)
+            window.setInterval((qmap.updateAll).bind(qmap), 1000)
         }
     })
 })();

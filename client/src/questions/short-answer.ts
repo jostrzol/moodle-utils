@@ -21,7 +21,7 @@ export default class QuestionShortAnswer extends Question {
             MoodleUtilsElem('<div>').addClass("answercounter").appendTo(a)
         }
 
-        $(htmlElement).on('change', this.#onChange)
+        $(htmlElement).on('change', (this.#onChange).bind(this))
         $(":text", htmlElement).on('keypress', e => {
             if (e.key == "Enter")
                 this.#onChange(e)

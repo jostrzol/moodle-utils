@@ -66,8 +66,11 @@ func (q *Question) Update(attempt string, newAnswers interface{}) error {
 		}
 
 		// opt out from previous answers
-		for _, v := range q.Answers {
-			delete(v, attempt)
+		for answer, answerSet := range q.Answers {
+			delete(answerSet, attempt)
+			if len(answerSet) == 0 {
+				delete(q.Answers, answer)
+			}
 		}
 
 		// opt in for the selected answers

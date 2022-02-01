@@ -1,4 +1,5 @@
 import Connection from "../connection"
+import MoodleUtilsElem from "../moodle-utils-elem"
 import OnHTMLElement from "../on-html-element"
 import Question from "./question"
 
@@ -63,7 +64,7 @@ export class GapSelectPlace extends OnHTMLElement<HTMLSelectElement> {
         }
         this.#name = name
 
-        $(htmlElement).on("change", this.#onChange)
+        $(htmlElement).on("change", (this.#onChange).bind(this))
     }
 
     #onChange(e: JQuery.TriggeredEvent) {
@@ -109,6 +110,11 @@ export default class QuestionGapSelect extends Question {
         super(htmlElement, connection)
         $("select", htmlElement)
             .each((_, p) => { this.#addPlace(p as HTMLSelectElement) })
+
+
+        MoodleUtilsElem("<div>").addClass("moodleutils-info")
+            .text("(numbers in brackets show answer counts)")
+            .prependTo($(".formulation", htmlElement))
     }
 
     protected static extractText(htmlElement: HTMLElement): string {

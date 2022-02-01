@@ -4,55 +4,60 @@
 
 /* ANSWERS */
 
-.moodleutils .answercounter {
+.moodleutils.answercounter {
     float: right;
 }
 
-.moodleutils .topshortanswers {
+.moodleutils.topshortanswers {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
 }
 
-.moodleutils .topshortanswer {
+.moodleutils.topshortanswer {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
 }
 
-.moodleutils .topshortanswercontent {
+.moodleutils.topshortanswercontent {
     width: -webkit-fill-available;
+}
+
+.moodleutils.moodleutils-info {
+    font-style: italic;
+    margin-bottom: 1em;
 }
 
 /* TIMER */
 
-.moodleutils .perquestion {
+.moodleutils.perquestion {
     color: black
 }
 
-.moodleutils .timerperquestion {
+.moodleutils.timerperquestion {
     font-weight: 700;
     color: black
 }
 
 /* SERVER STATUS */
 
-.moodleutils .status::after {
+.moodleutils.status::before {
     content: "???";
     float: right;
 }
 
-.moodleutils .status .unknown::after {
+.moodleutils.status.unknown::before {
     content: "???";
     float: right;
 }
 
-.moodleutils .status .ok::after {
+.moodleutils.status.ok::before {
     content: "OK";
     color: hsla(120, 100%, 41%, 0.75);
 }
 
-.moodleutils .status .failed::after {
+.moodleutils.status.failed::before {
     content: "FAILED";
     color: hsla(0, 100%, 54%, 0.75);
 }

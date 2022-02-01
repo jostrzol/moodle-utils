@@ -34,7 +34,7 @@ export default class QuestionTrueFalse extends Question {
         this.#falseCount = falseCount
 
 
-        $(htmlElement).on('change', this.#onChange)
+        $(htmlElement).on('change', (this.#onChange).bind(this))
         $(":radio:checked", htmlElement).trigger('change') // send initial value
     }
 

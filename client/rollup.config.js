@@ -19,7 +19,7 @@ export default {
     file: 'dist/bundle.user.js',
     format: 'iife',
     name: 'moodleUtils',
-    banner: () => ('\n/*\n' + fs.readFileSync('./LICENSE', 'utf8') + '*/\n'),
+    banner: () => ('\n/*\n' + fs.readFileSync('../LICENSE', 'utf8') + '*/\n'),
     sourcemap: true,
     globals: {
       // react: 'React',
