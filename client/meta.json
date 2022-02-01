@@ -1,0 +1,20 @@
+{
+    "namespace": "https://github.com/Ogurczak",
+    "copyright": "2022, Ogurczak",
+    "require": [
+        "https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js",
+        "http://code.jquery.com/jquery-3.4.1.min.js"
+    ],
+    "match": [
+        "https://*/mod/quiz/attempt*",
+        "https://*/mod/quiz*",
+        "https://github.com/Ogurczak/moodle-utils*",
+        "https://*.moodlecloud.com/*"
+    ],
+    "grant": [
+        "GM_getValue",
+        "GM_addStyle",
+        "GM_setValue",
+        "GM_registerMenuCommand"
+    ]
+}

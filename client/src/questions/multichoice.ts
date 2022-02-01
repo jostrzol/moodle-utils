@@ -1,5 +1,5 @@
-import Connection from "connection"
-import MoodleUtilsElem from "moodle-utils-elem"
+import Connection from "../connection"
+import MoodleUtilsElem from "../moodle-utils-elem"
 import Question from "./question"
 
 export default class QuestionMultichoice extends Question {

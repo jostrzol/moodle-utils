@@ -1,6 +1,6 @@
-import Connection from "connection"
-import MoodleUtilsElem from "moodle-utils-elem"
-import OnHTMLElement from "on-html-element"
+import Connection from "../connection"
+import MoodleUtilsElem from "../moodle-utils-elem"
+import OnHTMLElement from "../on-html-element"
 import Question from "./question"
 
 export default class QuestionTrueFalse extends Question {

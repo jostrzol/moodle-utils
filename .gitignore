@@ -7,3 +7,4 @@ dump
 node_modules
 tmp
 server/server
+client/dist/*.dev.*

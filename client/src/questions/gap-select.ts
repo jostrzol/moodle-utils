@@ -1,5 +1,5 @@
-import Connection from "connection"
-import OnHTMLElement from "on-html-element"
+import Connection from "../connection"
+import OnHTMLElement from "../on-html-element"
 import Question from "./question"
 
 export class Option extends OnHTMLElement {

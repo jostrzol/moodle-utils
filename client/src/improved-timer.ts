@@ -1,4 +1,4 @@
-import MoodleUtilsElem from "moodle-utils-elem"
+import MoodleUtilsElem from "./moodle-utils-elem"
 
 export default class ImprovedTimer {
     #moodleTimer: Moodle.Timer

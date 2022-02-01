@@ -1,29 +1,57 @@
 {
-  "devDependencies": {
-    "@babel/plugin-proposal-class-properties": "^7.16.7",
-    "@babel/plugin-proposal-object-rest-spread": "^7.16.7",
-    "@babel/preset-env": "^7.16.11",
-    "@babel/preset-typescript": "^7.16.7",
-    "@types/jquery": "^3.5.13",
-    "@types/node": "^10.12.18",
-    "@types/terser-webpack-plugin": "^1.2.1",
-    "@types/webpack": "^4.4.23",
-    "cross-env": "^5.2.1",
-    "ts-loader": "^5.3.3",
-    "ts-node": "^7.0.1",
-    "tsconfig-paths": "^3.8.0",
-    "typescript": "^3.4.0",
-    "webpack": "^4.28.4",
-    "webpack-cli": "^3.2.1"
-  },
-  "scripts": {
-    "build": "cross-env TS_NODE_PROJECT=\"tsconfig-for-webpack-config.json\" webpack",
-    "build-dev": "npm run build -- --mode development",
-    "build-clip": "npm run build && npm run content-to-clipboard",
-    "build-clip-dev": "npm run build-dev && npm run content-to-clipboard",
-    "content-to-clipboard": "clip < dist/script.user.js"
-  },
-  "dependencies": {
-    "rxjs": "^6.5.1"
-  }
+    "name": "moodle-utils",
+    "version": "0.7.2",
+    "description": "Displays time per question left",
+    "keywords": [
+        "moodle"
+    ],
+    "homepage": "https://github.com/Ogurczak/moodle-utils",
+    "repository": {
+        "type": "git",
+        "url": "github:Ogurczak/moodle-utils"
+    },
+    "bugs": {
+        "url": "https://github.com/Ogurczak/moodle-utils/issues"
+    },
+    "author": "Ogurczak",
+    "license": "MIT",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "build": "npx rollup --config rollup.config.js",
+        "watch": "npx rollup --config rollup.config.js --watch",
+        "serve": "node -r esm server.js",
+        "start": "node -r esm server.js",
+        "build:release": "npx rollup --config rollup.config.js --sourcemap 0 --file dist/release-$npm_package_version.user.js",
+        "build:release:win32": "npx rollup --config rollup.config.js --sourcemap 0 --file dist\\release-%npm_package_version%.user.js",
+        "version": "npm run build:release && git add dist/release-$npm_package_version.user.js",
+        "prepublishOnly": "npm run build:release && git add dist/release-$npm_package_version.user.js"
+    },
+    "devDependencies": {
+        "@babel/cli": "^7.15.7",
+        "@babel/core": "^7.15.5",
+        "@babel/plugin-proposal-class-properties": "^7.14.5",
+        "@babel/preset-react": "^7.14.5",
+        "@rollup/plugin-babel": "^5.3.0",
+        "@rollup/plugin-commonjs": "^21.0.0",
+        "@rollup/plugin-node-resolve": "^13.0.5",
+        "@rollup/plugin-replace": "^3.0.0",
+        "@rollup/plugin-typescript": "^8.2.5",
+        "@types/jquery": "^3.5.13",
+        "colorette": "^2.0.14",
+        "cssnano": "^5.0.16",
+        "esm": "^3.2.25",
+        "postcss-cssnext": "^3.1.1",
+        "postcss-nested": "^5.0.6",
+        "postcss-simple-vars": "^6.0.3",
+        "rollup": "^2.58.0",
+        "rollup-plugin-postcss": "^4.0.2",
+        "rollup-plugin-styles": "^4.0.0",
+        "rollup-plugin-userscript-metablock": "^0.3.1",
+        "serve": "^12.0.1",
+        "tslib": "^2.3.1",
+        "typescript": "^4.4.3"
+    },
+    "config": {
+        "port": "8124"
+    }
 }
