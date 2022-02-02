@@ -580,4 +580,3 @@ SOFTWARE.
     })();
 
 })();
-//# sourceMappingURL=bundle.user.js.map
