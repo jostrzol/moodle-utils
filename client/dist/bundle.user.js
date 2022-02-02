@@ -80,7 +80,8 @@ SOFTWARE.
             _Connection_attemptId.set(this, void 0);
             this.onFail = () => { };
             this.onSuccess = () => { };
-            __classPrivateFieldSet(this, _Connection_serverAddress, serverAddress, "f");
+            // trim trailing slashes
+            __classPrivateFieldSet(this, _Connection_serverAddress, serverAddress.replace(/\/+$/, ''), "f");
             __classPrivateFieldSet(this, _Connection_cmid, cmid, "f");
             __classPrivateFieldSet(this, _Connection_attemptId, attemptId, "f");
         }

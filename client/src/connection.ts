@@ -10,7 +10,9 @@ export default class Connection {
     onSuccess: () => void = () => { }
 
     constructor(serverAddress: string, cmid: string, attemptId: string) {
-        this.#serverAddress = serverAddress
+        // trim trailing slashes
+        this.#serverAddress = serverAddress.replace(/\/+$/, '')
+
         this.#cmid = cmid
         this.#attemptId = attemptId
     }
