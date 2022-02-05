@@ -8,7 +8,7 @@
 // @match       https://*/mod/quiz*
 // @match       https://github.com/Ogurczak/moodle-utils*
 // @match       https://*.moodlecloud.com/*
-// @version     0.7.2
+// @version     0.7.3
 // @homepage    https://github.com/Ogurczak/moodle-utils
 // @author      Ogurczak
 // @license     MIT
