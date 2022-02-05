@@ -785,6 +785,7 @@ SOFTWARE.
             conn.onSuccess = () => serverStatusBar.status = "ok";
             conn.onFail = (t, u, v, r) => {
                 serverStatusBar.status = "failed";
+                console.error("moodle-utils server connection error: ", v);
             };
             // create current page's question map
             const qmap = new QuestionMap(document.body, conn);
