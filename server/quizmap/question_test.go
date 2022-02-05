@@ -11,12 +11,12 @@ func sampleQuestion() *Question {
 		SubQuestions: QuestionMap{
 			"sub1": &Question{
 				Answers: AnswerMap{
-					"ans1": StringSet{
+					"ans1": AttemptSet{
 						"att1": setMember,
 						"att2": setMember,
 						"att3": setMember,
 					},
-					"ans2": StringSet{
+					"ans2": AttemptSet{
 						"att4": setMember,
 						"att5": setMember,
 					},
@@ -24,11 +24,11 @@ func sampleQuestion() *Question {
 			},
 			"sub2": &Question{
 				Answers: AnswerMap{
-					"ans1": StringSet{
+					"ans1": AttemptSet{
 						"att1": setMember,
 						"att5": setMember,
 					},
-					"ans2": StringSet{
+					"ans2": AttemptSet{
 						"att4": setMember,
 						"att6": setMember,
 						"att7": setMember,

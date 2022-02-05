@@ -1,63 +1,72 @@
-.moodleutils {
+.moodle-utils {
     color: grey
+}
+
+/* QUESTIONS */
+
+.moodle-utils.moodle-utils-top-bar {
+    margin-bottom: 1em;
+}
+
+.moodle-utils.moodle-utils-unsure-box {
+    float: right;
+}
+
+.moodle-utils.moodle-utils-info {
+    font-style: italic;
 }
 
 /* ANSWERS */
 
-.moodleutils.answercounter {
+.moodle-utils.answer-counter {
     float: right;
 }
 
-.moodleutils.topshortanswers {
+.moodle-utils.top-short-answers {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
 }
 
-.moodleutils.topshortanswer {
+.moodle-utils.top-short-answer {
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
 }
 
-.moodleutils.topshortanswercontent {
+.moodle-utils.top-short-answer-content {
     width: -webkit-fill-available;
-}
-
-.moodleutils.moodleutils-info {
-    font-style: italic;
-    margin-bottom: 1em;
 }
 
 /* TIMER */
 
-.moodleutils.perquestion {
+.moodle-utils.per-question {
     color: black
 }
 
-.moodleutils.timerperquestion {
+.moodle-utils.timer-per-question {
     font-weight: 700;
     color: black
 }
 
 /* SERVER STATUS */
 
-.moodleutils.status::before {
+.moodle-utils.status::before {
     content: "???";
     float: right;
 }
 
-.moodleutils.status.unknown::before {
+.moodle-utils.status.unknown::before {
     content: "???";
     float: right;
 }
 
-.moodleutils.status.ok::before {
+.moodle-utils.status.ok::before {
     content: "OK";
     color: hsla(120, 100%, 41%, 0.75);
 }
 
-.moodleutils.status.failed::before {
+.moodle-utils.status.failed::before {
     content: "FAILED";
     color: hsla(0, 100%, 54%, 0.75);
 }

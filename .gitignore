@@ -7,4 +7,5 @@ dump
 node_modules
 tmp
 server/server
-client/dist/*.dev.*
+client/dist/*
+!client/dist/release.user.js

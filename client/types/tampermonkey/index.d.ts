@@ -51,7 +51,7 @@ declare var GM_info: {
 
 declare function GM_addStyle(css: string): void;
 
-declare function GM_deleteValue(name: string): void;
+declare function GM_deconsteValue(name: string): void;
 
 declare function GM_listValues(): string[];
 
@@ -61,7 +61,7 @@ declare function GM_removeValueChangeListener(listenerId: number): void;
 
 declare function GM_setValue(name: string, value: any): void;
 
-declare function GM_getValue(name: string, defaultValue?: any): any;
+declare function GM_getValue<T = any>(name: string, defaultValue?: T): T;
 
 declare function GM_log(message: string): any;
 

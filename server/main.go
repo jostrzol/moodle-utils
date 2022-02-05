@@ -73,6 +73,9 @@ func main() {
 		Queries("attempt", "{attempt:[0-9]+}")
 	sWithQuiz.HandleFunc("/get-answers", handlerWrapper(quizMap, getAnswersHandler)).
 		Methods(http.MethodGet, http.MethodOptions)
+	sWithQuiz.HandleFunc("/reset-answers", handlerWrapper(quizMap, resetAnswersHandler)).
+		Methods(http.MethodDelete, http.MethodOptions).
+		Queries("attempt", "{attempt:[0-9]+}")
 
 	http.HandleFunc("/", r.ServeHTTP)
 

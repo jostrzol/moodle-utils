@@ -12,14 +12,14 @@ export class QuestionMap extends Map<string, Question>{
         super()
         $(".que", root)
             .map((_, q) => this.#create(q, connection))
-            .each((_, q) => { this.set(q.text, q) })
+            .each((_, q) => { this.set(q.questionText, q) })
         this.connection = connection
     }
 
     public updateAll() {
         this.connection.getAnswers(data => {
-            for (let [qtext, qdata] of Object.entries(data)) {
-                let q = this.get(qtext)
+            for (const [qtext, qdata] of Object.entries(data)) {
+                const q = this.get(qtext)
                 if (q !== undefined)
                     try {
                         q.update(qdata)

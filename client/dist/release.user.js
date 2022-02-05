@@ -14,6 +14,7 @@
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
+// @grant       GM_addValueChangeListener
 // @grant       GM_addStyle
 // @grant       GM_registerMenuCommand
 // ==/UserScript==
@@ -72,6 +73,12 @@ SOFTWARE.
     }
 
     var _Connection_instances, _Connection_serverAddress, _Connection_cmid, _Connection_attemptId, _Connection_urlId_get, _Connection_endpointUrl;
+    class NoURLQueryError extends Error {
+        constructor(queryName) {
+            super(`required '${queryName}' query not found in url`);
+            this.queryName = queryName;
+        }
+    }
     class Connection {
         constructor(serverAddress, cmid, attemptId) {
             _Connection_instances.add(this);
@@ -90,10 +97,10 @@ SOFTWARE.
             const cmid = parsedUrl.searchParams.get("cmid");
             const attempt = parsedUrl.searchParams.get("attempt");
             if (cmid === null) {
-                throw new Error("required 'cmid' query not found in url");
+                throw new NoURLQueryError('cmid');
             }
             else if (attempt === null) {
-                throw new Error("required 'attempt' query not found in url");
+                throw new NoURLQueryError('attempt');
             }
             return new Connection(serverAddress, cmid, attempt);
         }
@@ -108,10 +115,20 @@ SOFTWARE.
         }
         getAnswers(callback, ...questions) {
             let url = __classPrivateFieldGet(this, _Connection_instances, "m", _Connection_endpointUrl).call(this, "get-answers");
-            for (let q of questions) {
-                url += `&q=${encodeURIComponent(q.text)}`;
+            for (const q of questions) {
+                url += `&q=${encodeURIComponent(q.questionText)}`;
             }
             return $.getJSON(url, callback).fail(this.onFail).done(this.onSuccess);
+        }
+        resetAnswers(...questions) {
+            let url = __classPrivateFieldGet(this, _Connection_instances, "m", _Connection_endpointUrl).call(this, "reset-answers");
+            for (const q of questions) {
+                url += `&q=${encodeURIComponent(q.questionText)}`;
+            }
+            return $.ajax({
+                url: url,
+                type: 'delete',
+            }).fail(this.onFail).done(this.onSuccess);
         }
     }
     _Connection_serverAddress = new WeakMap(), _Connection_cmid = new WeakMap(), _Connection_attemptId = new WeakMap(), _Connection_instances = new WeakSet(), _Connection_urlId_get = function _Connection_urlId_get() {
@@ -120,39 +137,126 @@ SOFTWARE.
         return `${__classPrivateFieldGet(this, _Connection_serverAddress, "f")}/${endpointName}?${__classPrivateFieldGet(this, _Connection_instances, "a", _Connection_urlId_get)}`;
     };
 
+    var _a$1, _AttemptCookies_defaultExpire_get, _AttemptCookies_unsureSet, _MoodleUtilsCookies_instances, _b, _MoodleUtilsCookies_instance, _MoodleUtilsCookies_unsureMap, _MoodleUtilsCookies_unsureMapFromObject, _MoodleUtilsCookies_unsureMapObjectified, _MoodleUtilsCookies_attemptId_get, _MoodleUtilsCookies_onUnsureMapChange;
+    class AttemptCookies {
+        constructor(expire) {
+            _AttemptCookies_unsureSet.set(this, new Set());
+            this.expire = expire ?? __classPrivateFieldGet(AttemptCookies, _a$1, "a", _AttemptCookies_defaultExpire_get);
+        }
+        setUnsure(questionText, newValue) {
+            if (newValue)
+                __classPrivateFieldGet(this, _AttemptCookies_unsureSet, "f").add(questionText);
+            else
+                __classPrivateFieldGet(this, _AttemptCookies_unsureSet, "f").delete(questionText);
+        }
+        getUnsure(questionText) {
+            return __classPrivateFieldGet(this, _AttemptCookies_unsureSet, "f").has(questionText);
+        }
+        isEmpty() { return __classPrivateFieldGet(this, _AttemptCookies_unsureSet, "f").size == 0; }
+        isExpired() { return this.expire < Date.now(); }
+        objectified() {
+            const object = Object.fromEntries(Object.entries(this));
+            object.unsureSet = [...__classPrivateFieldGet(this, _AttemptCookies_unsureSet, "f").keys()];
+            return object;
+        }
+        static fromObject(object) {
+            const result = new AttemptCookies(object.expire);
+            for (const questionText of object.unsureSet) {
+                __classPrivateFieldGet(result, _AttemptCookies_unsureSet, "f").add(questionText);
+            }
+            return result;
+        }
+    }
+    _a$1 = AttemptCookies, _AttemptCookies_unsureSet = new WeakMap(), _AttemptCookies_defaultExpire_get = function _AttemptCookies_defaultExpire_get() { return Date.now() + 1000 * 60 * 60 * 24 * 3; };
+    // singleton
+    class MoodleUtilsCookies {
+        constructor() {
+            _MoodleUtilsCookies_instances.add(this);
+            _MoodleUtilsCookies_unsureMap.set(this, void 0);
+            __classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "m", _MoodleUtilsCookies_unsureMapFromObject).call(this, GM_getValue('unsureMap', {}));
+            GM_addValueChangeListener('unsureMap', (__classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "m", _MoodleUtilsCookies_onUnsureMapChange)).bind(this));
+            __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").forEach((v, k) => {
+                if (v.isExpired())
+                    __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").delete(k);
+            });
+            GM_setValue('unsureMap', __classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "m", _MoodleUtilsCookies_unsureMapObjectified).call(this));
+        }
+        static get instance() {
+            if (__classPrivateFieldGet(this, _b, "f", _MoodleUtilsCookies_instance) === undefined)
+                __classPrivateFieldSet(this, _b, new MoodleUtilsCookies(), "f", _MoodleUtilsCookies_instance);
+            return __classPrivateFieldGet(this, _b, "f", _MoodleUtilsCookies_instance);
+        }
+        setUnsure(questionText, newValue) {
+            let attemptCookies = __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").get(__classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "a", _MoodleUtilsCookies_attemptId_get));
+            if (attemptCookies === undefined) {
+                if (!newValue)
+                    //dont have to do anything
+                    return;
+                const expire = M.mod_quiz.timer.endtime; // =0 if not set
+                attemptCookies = new AttemptCookies(expire || null);
+                __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").set(__classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "a", _MoodleUtilsCookies_attemptId_get), attemptCookies);
+            }
+            attemptCookies.setUnsure(questionText, newValue);
+            if (attemptCookies.isEmpty())
+                __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").delete(__classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "a", _MoodleUtilsCookies_attemptId_get));
+            GM_setValue('unsureMap', __classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "m", _MoodleUtilsCookies_unsureMapObjectified).call(this));
+        }
+        getUnsure(questionText) {
+            let attemptCookies = __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").get(__classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "a", _MoodleUtilsCookies_attemptId_get));
+            if (attemptCookies === undefined)
+                return false;
+            return attemptCookies.getUnsure(questionText);
+        }
+    }
+    _b = MoodleUtilsCookies, _MoodleUtilsCookies_unsureMap = new WeakMap(), _MoodleUtilsCookies_instances = new WeakSet(), _MoodleUtilsCookies_unsureMapFromObject = function _MoodleUtilsCookies_unsureMapFromObject(newValue) {
+        __classPrivateFieldSet(this, _MoodleUtilsCookies_unsureMap, new Map(), "f");
+        Object.entries(newValue).forEach(([key, value]) => {
+            __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").set(key, AttemptCookies.fromObject(value));
+        });
+        return __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f");
+    }, _MoodleUtilsCookies_unsureMapObjectified = function _MoodleUtilsCookies_unsureMapObjectified() {
+        const result = {};
+        __classPrivateFieldGet(this, _MoodleUtilsCookies_unsureMap, "f").forEach((value, key) => { result[key] = value.objectified(); });
+        return result;
+    }, _MoodleUtilsCookies_attemptId_get = function _MoodleUtilsCookies_attemptId_get() { return `${this.cmid},${this.attempt}`; }, _MoodleUtilsCookies_onUnsureMapChange = function _MoodleUtilsCookies_onUnsureMapChange(name, oldValue, newValue, remote) {
+        if (remote)
+            __classPrivateFieldGet(this, _MoodleUtilsCookies_instances, "m", _MoodleUtilsCookies_unsureMapFromObject).call(this, newValue);
+    };
+    _MoodleUtilsCookies_instance = { value: void 0 };
+
     function MoodleUtilsElem(str) {
-        return $(str).addClass("moodleutils");
+        return $(str).addClass("moodle-utils");
     }
 
-    var _ImprovedTimer_instances, _ImprovedTimer_moodleTimer, _ImprovedTimer_timer, _ImprovedTimer_perQuestionUpdate;
+    var _ImprovedTimer_instances, _ImprovedTimer_moodconstimer, _ImprovedTimer_timer, _ImprovedTimer_perQuestionUpdate;
     class ImprovedTimer {
-        constructor(moodleTimer) {
+        constructor(moodconstimer) {
             _ImprovedTimer_instances.add(this);
-            _ImprovedTimer_moodleTimer.set(this, void 0);
+            _ImprovedTimer_moodconstimer.set(this, void 0);
             _ImprovedTimer_timer.set(this, void 0);
-            let perQuestion = MoodleUtilsElem("<div>").addClass("perquestion")
+            const perQuestion = MoodleUtilsElem("<div>").addClass("per-question")
                 .text("Średnio na pytanie ").appendTo(".othernav");
-            let timer = MoodleUtilsElem("<span>").addClass("timerperquestion")
+            const timer = MoodleUtilsElem("<span>").addClass("timer-per-question")
                 .appendTo(perQuestion);
             __classPrivateFieldSet(this, _ImprovedTimer_timer, timer[0], "f");
-            __classPrivateFieldSet(this, _ImprovedTimer_moodleTimer, moodleTimer, "f");
-            let orgUpdate = moodleTimer.update;
-            moodleTimer.update = () => {
+            __classPrivateFieldSet(this, _ImprovedTimer_moodconstimer, moodconstimer, "f");
+            const orgUpdate = moodconstimer.update;
+            moodconstimer.update = () => {
                 orgUpdate();
                 __classPrivateFieldGet(this, _ImprovedTimer_instances, "m", _ImprovedTimer_perQuestionUpdate).call(this);
             };
         }
     }
-    _ImprovedTimer_moodleTimer = new WeakMap(), _ImprovedTimer_timer = new WeakMap(), _ImprovedTimer_instances = new WeakSet(), _ImprovedTimer_perQuestionUpdate = function _ImprovedTimer_perQuestionUpdate() {
-        let notAnsweredLen = $(".qnbutton.notyetanswered").length;
+    _ImprovedTimer_moodconstimer = new WeakMap(), _ImprovedTimer_timer = new WeakMap(), _ImprovedTimer_instances = new WeakSet(), _ImprovedTimer_perQuestionUpdate = function _ImprovedTimer_perQuestionUpdate() {
+        const notAnsweredLen = $(".qnbutton.notyetanswered").length;
         if (notAnsweredLen == 0) {
             return;
         }
-        let timeS = (__classPrivateFieldGet(this, _ImprovedTimer_moodleTimer, "f").endtime - new Date().getTime()) / 1000;
-        let tPerQuestion = timeS / notAnsweredLen;
-        let m = Math.floor(tPerQuestion / 60);
-        let [s, ms] = (tPerQuestion % 60).toFixed(3).split(".");
-        let tPerQuestionStr = `${m}:${s.padStart(2, "0")}.${ms}`;
+        const timeS = (__classPrivateFieldGet(this, _ImprovedTimer_moodconstimer, "f").endtime - new Date().getTime()) / 1000;
+        const tPerQuestion = timeS / notAnsweredLen;
+        const m = Math.floor(tPerQuestion / 60);
+        const [s, ms] = (tPerQuestion % 60).toFixed(3).split(".");
+        const tPerQuestionStr = `${m}:${s.padStart(2, "0")}.${ms}`;
         __classPrivateFieldGet(this, _ImprovedTimer_timer, "f").innerHTML = tPerQuestionStr;
     };
 
@@ -195,22 +299,78 @@ SOFTWARE.
         }
     };
 
-    var _Question_text;
+    var _Question_instances, _Question_questionText, _Question_answerBlock, _Question_topBar, _Question_info, _Question_unsureCheckbox, _Question_onUnsureChange, _Question_onUnload;
     class Question extends OnHTMLElement {
         constructor(htmlElement, connection) {
             super(htmlElement);
-            _Question_text.set(this, void 0);
-            __classPrivateFieldSet(this, _Question_text, Question.extractText(htmlElement), "f");
+            _Question_instances.add(this);
+            _Question_questionText.set(this, void 0);
+            _Question_answerBlock.set(this, void 0);
+            _Question_topBar.set(this, void 0);
+            _Question_info.set(this, void 0);
+            _Question_unsureCheckbox.set(this, void 0);
             this.connection = connection;
+            __classPrivateFieldSet(this, _Question_questionText, this.constructor.extractText(htmlElement), "f");
+            __classPrivateFieldSet(this, _Question_answerBlock, $(".ablock", htmlElement).get(0), "f");
+            __classPrivateFieldSet(this, _Question_topBar, MoodleUtilsElem("<div>")
+                .addClass("moodle-utils-top-bar")
+                .prependTo($(".formulation", htmlElement))
+                .get(0), "f");
+            const unsureBox = MoodleUtilsElem("<div>")
+                .addClass("moodle-utils-unsure-box")
+                .appendTo(__classPrivateFieldGet(this, _Question_topBar, "f"));
+            const checkboxId = `moodle-utils-unsure-checkbox-${htmlElement.id}`;
+            MoodleUtilsElem("<label>")
+                .attr("for", checkboxId)
+                .text("? ")
+                .appendTo(unsureBox);
+            __classPrivateFieldSet(this, _Question_unsureCheckbox, MoodleUtilsElem("<input>")
+                .attr("id", checkboxId)
+                .attr("type", "checkbox")
+                .on("change", (__classPrivateFieldGet(this, _Question_instances, "m", _Question_onUnsureChange)).bind(this))
+                .appendTo(unsureBox)
+                .get(0), "f");
+            __classPrivateFieldSet(this, _Question_info, MoodleUtilsElem("<div>")
+                .addClass("moodle-utils-info")
+                .appendTo(__classPrivateFieldGet(this, _Question_topBar, "f"))
+                .get(0), "f");
+            // remember unsure setting
+            const cookies = MoodleUtilsCookies.instance;
+            __classPrivateFieldGet(this, _Question_unsureCheckbox, "f").checked = cookies.getUnsure(__classPrivateFieldGet(this, _Question_questionText, "f"));
+            $(window).on("beforeunload", (__classPrivateFieldGet(this, _Question_instances, "m", _Question_onUnload)).bind(this));
         }
+        get questionText() { return __classPrivateFieldGet(this, _Question_questionText, "f"); }
+        get answerBlock() { return __classPrivateFieldGet(this, _Question_answerBlock, "f"); }
+        get topBar() { return __classPrivateFieldGet(this, _Question_topBar, "f"); }
+        get info() { return __classPrivateFieldGet(this, _Question_info, "f"); }
+        setInfoText(text) { __classPrivateFieldGet(this, _Question_info, "f").innerText = text; }
+        get unsureCheckbox() { return __classPrivateFieldGet(this, _Question_unsureCheckbox, "f"); }
+        get isUnsure() { return __classPrivateFieldGet(this, _Question_unsureCheckbox, "f").checked; }
         static extractText(htmlElement) {
             return $(".qtext", htmlElement).text();
         }
-        get text() { return __classPrivateFieldGet(this, _Question_text, "f"); }
+        resetAnswer() {
+            this.connection.resetAnswers(this);
+        }
+        postAnswers(data) {
+            if (this.isUnsure)
+                return;
+            this.connection.postAnswers({ [this.questionText]: data });
+        }
     }
-    _Question_text = new WeakMap();
+    _Question_questionText = new WeakMap(), _Question_answerBlock = new WeakMap(), _Question_topBar = new WeakMap(), _Question_info = new WeakMap(), _Question_unsureCheckbox = new WeakMap(), _Question_instances = new WeakSet(), _Question_onUnsureChange = function _Question_onUnsureChange(e) {
+        if (this.isUnsure)
+            this.resetAnswer();
+        else
+            this.postAnswers(this.fullAnswerData());
+        // prevent any question-specific handlers 
+        // from firing on this checkbox
+        e.stopPropagation();
+    }, _Question_onUnload = function _Question_onUnload(e) {
+        MoodleUtilsCookies.instance.setUnsure(__classPrivateFieldGet(this, _Question_questionText, "f"), __classPrivateFieldGet(this, _Question_unsureCheckbox, "f").checked);
+    };
 
-    var _Option_originalText, _Option_value, _GapSelectPlace_instances, _a, _GapSelectPlace_nameValidator, _GapSelectPlace_isName, _GapSelectPlace_options, _GapSelectPlace_name, _GapSelectPlace_addOption, _GapSelectPlace_onChange, _QuestionGapSelect_instances, _QuestionGapSelect_places, _QuestionGapSelect_addPlace;
+    var _Option_originalText, _Option_value, _GapSelectPlace_instances, _a, _GapSelectPlace_nameValidator_get, _GapSelectPlace_isName, _GapSelectPlace_options, _GapSelectPlace_name, _GapSelectPlace_addOption, _GapSelectPlace_onChange, _QuestionGapSelect_instances, _QuestionGapSelect_places, _QuestionGapSelect_addPlace;
     class Option extends OnHTMLElement {
         constructor(parent, htmlElement) {
             super(htmlElement);
@@ -248,11 +408,15 @@ SOFTWARE.
                 }
             });
             if (name === null) {
-                const matcher = __classPrivateFieldGet(GapSelectPlace, _a, "f", _GapSelectPlace_nameValidator).source;
+                const matcher = __classPrivateFieldGet(GapSelectPlace, _a, "a", _GapSelectPlace_nameValidator_get).source;
                 throw new OnHTMLElement.ConstructionError(htmlElement, `GapSelectPlace: no name (class matching ${matcher})`);
             }
             __classPrivateFieldSet(this, _GapSelectPlace_name, name, "f");
             $(htmlElement).on("change", (__classPrivateFieldGet(this, _GapSelectPlace_instances, "m", _GapSelectPlace_onChange)).bind(this));
+        }
+        fullAnswerData() {
+            const selected = this.selected;
+            return { [__classPrivateFieldGet(this, _GapSelectPlace_name, "f")]: selected !== null ? [selected.value] : [] };
         }
         update(data) {
             for (const [optionName, option] of __classPrivateFieldGet(this, _GapSelectPlace_options, "f")) {
@@ -269,24 +433,15 @@ SOFTWARE.
                 return __classPrivateFieldGet(this, _GapSelectPlace_options, "f").get(selected[0].value) || null;
         }
     }
-    _a = GapSelectPlace, _GapSelectPlace_options = new WeakMap(), _GapSelectPlace_name = new WeakMap(), _GapSelectPlace_instances = new WeakSet(), _GapSelectPlace_isName = function _GapSelectPlace_isName(str) {
-        return __classPrivateFieldGet(GapSelectPlace, _a, "f", _GapSelectPlace_nameValidator).test(str);
+    _a = GapSelectPlace, _GapSelectPlace_options = new WeakMap(), _GapSelectPlace_name = new WeakMap(), _GapSelectPlace_instances = new WeakSet(), _GapSelectPlace_nameValidator_get = function _GapSelectPlace_nameValidator_get() { return /^place\d+$/; }, _GapSelectPlace_isName = function _GapSelectPlace_isName(str) {
+        return __classPrivateFieldGet(GapSelectPlace, _a, "a", _GapSelectPlace_nameValidator_get).test(str);
     }, _GapSelectPlace_addOption = function _GapSelectPlace_addOption(htmlElement) {
         const option = new Option(this, htmlElement);
         __classPrivateFieldGet(this, _GapSelectPlace_options, "f").set(option.value, option);
         return option;
     }, _GapSelectPlace_onChange = function _GapSelectPlace_onChange(e) {
-        const answers = [];
-        const selected = this.selected;
-        if (selected !== null)
-            answers.push(selected.value);
-        this.parent.connection.postAnswers({
-            [this.parent.text]: {
-                [__classPrivateFieldGet(this, _GapSelectPlace_name, "f")]: answers
-            }
-        });
+        this.parent.postAnswers(this.fullAnswerData());
     };
-    _GapSelectPlace_nameValidator = { value: /^place\d+$/ };
     class QuestionGapSelect extends Question {
         constructor(htmlElement, connection) {
             super(htmlElement, connection);
@@ -294,16 +449,22 @@ SOFTWARE.
             _QuestionGapSelect_places.set(this, new Map());
             $("select", htmlElement)
                 .each((_, p) => { __classPrivateFieldGet(this, _QuestionGapSelect_instances, "m", _QuestionGapSelect_addPlace).call(this, p); });
-            MoodleUtilsElem("<div>").addClass("moodleutils-info")
-                .text("(numbers in brackets show answer counts)")
-                .prependTo($(".formulation", htmlElement));
+            this.setInfoText("(numbers in brackets show answer counts)");
+            this.postAnswers(this.fullAnswerData());
         }
         static extractText(htmlElement) {
             return $(".qtext", htmlElement).clone().find(".control").remove().end().text();
         }
+        fullAnswerData() {
+            const result = {};
+            for (const [placeText, place] of __classPrivateFieldGet(this, _QuestionGapSelect_places, "f")) {
+                Object.assign(result, place.fullAnswerData());
+            }
+            return result;
+        }
         update(data) {
             for (const [placeText, place] of __classPrivateFieldGet(this, _QuestionGapSelect_places, "f")) {
-                place.update(data[placeText]);
+                place.update(data[placeText] || {});
             }
         }
     }
@@ -313,103 +474,141 @@ SOFTWARE.
         return place;
     };
 
-    var _QuestionMultichoice_instances, _QuestionMultichoice_counts, _QuestionMultichoice_inputs, _QuestionMultichoice_onChangeMultichoice, _QuestionMultichoice_onChangeRadio, _QuestionMultichoice_onCancel;
+    var _Choice_text, _Choice_counter, _QuestionMultichoice_instances, _QuestionMultichoice_choices, _QuestionMultichoice_isSingleChoice, _QuestionMultichoice_addChoice, _QuestionMultichoice_onChangeMultichoice, _QuestionMultichoice_onChangeRadio, _QuestionMultichoice_onCancel;
+    class Choice extends OnHTMLElement {
+        constructor(htmlElement) {
+            super(htmlElement);
+            _Choice_text.set(this, void 0);
+            _Choice_counter.set(this, void 0);
+            const label = $("~ .d-flex", htmlElement);
+            __classPrivateFieldSet(this, _Choice_text, $("div.flex-fill", label).text(), "f");
+            __classPrivateFieldSet(this, _Choice_counter, MoodleUtilsElem("<span>")
+                .addClass("answer-counter")
+                .text(0)
+                .appendTo(label)
+                .get(0), "f");
+        }
+        setCount(count) { __classPrivateFieldGet(this, _Choice_counter, "f").innerText = count; }
+        get text() { return __classPrivateFieldGet(this, _Choice_text, "f"); }
+    }
+    _Choice_text = new WeakMap(), _Choice_counter = new WeakMap();
     class QuestionMultichoice extends Question {
         constructor(htmlElement, connection) {
             super(htmlElement, connection);
             _QuestionMultichoice_instances.add(this);
-            _QuestionMultichoice_counts.set(this, new Map());
-            _QuestionMultichoice_inputs.set(this, new Map());
-            for (let input of $("[value!=-1]:radio, :checkbox", htmlElement)) {
-                let label = $("~ .d-flex", input);
-                let counter = MoodleUtilsElem("<span>").addClass("answercounter").text(0).appendTo(label)[0];
-                let answerText = $("div.flex-fill", label).text();
-                __classPrivateFieldGet(this, _QuestionMultichoice_counts, "f").set(answerText, counter);
-                __classPrivateFieldGet(this, _QuestionMultichoice_inputs, "f").set(input, answerText);
-            }
-            let cancel = $(".qtype_multichoice_clearchoice a", htmlElement)[0];
+            _QuestionMultichoice_choices.set(this, new Map());
+            _QuestionMultichoice_isSingleChoice.set(this, void 0);
+            $("[value!=-1]:radio, :checkbox", this.answerBlock)
+                .map((_, c) => { __classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_addChoice).call(this, c); });
+            const cancel = $(".qtype_multichoice_clearchoice a", this.answerBlock);
             // no cancel in multichoice with multiple answers
-            if (cancel) {
-                $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeRadio)).bind(this));
-                $(cancel).on('click', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onCancel)).bind(this));
-                $("[value!=-1]:radio:checked", htmlElement).trigger('change'); // send initial value
+            if (cancel.length > 0) {
+                __classPrivateFieldSet(this, _QuestionMultichoice_isSingleChoice, true, "f");
+                $(this.answerBlock).on('change', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeRadio)).bind(this));
+                cancel.on('click', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onCancel)).bind(this));
             }
             else {
-                $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeMultichoice)).bind(this));
-                $(":checkbox:checked", htmlElement).trigger('change'); // send initial value
+                __classPrivateFieldSet(this, _QuestionMultichoice_isSingleChoice, false, "f");
+                $(this.answerBlock).on('change', (__classPrivateFieldGet(this, _QuestionMultichoice_instances, "m", _QuestionMultichoice_onChangeMultichoice)).bind(this));
             }
+            this.postAnswers(this.fullAnswerData());
+        }
+        get isSingleChoice() { return __classPrivateFieldGet(this, _QuestionMultichoice_isSingleChoice, "f"); }
+        fullAnswerData() {
+            return $(":checked[value!=-1]", this.answerBlock)
+                .map((_, e) => __classPrivateFieldGet(this, _QuestionMultichoice_choices, "f").get(e).text)
+                .get();
         }
         update(data) {
-            for (let [answerText, counter] of __classPrivateFieldGet(this, _QuestionMultichoice_counts, "f")) {
-                let count = data[answerText] || "0";
-                counter.innerText = count;
+            for (const choice of __classPrivateFieldGet(this, _QuestionMultichoice_choices, "f").values()) {
+                choice.setCount(data[choice.text] || "0");
             }
         }
     }
-    _QuestionMultichoice_counts = new WeakMap(), _QuestionMultichoice_inputs = new WeakMap(), _QuestionMultichoice_instances = new WeakSet(), _QuestionMultichoice_onChangeMultichoice = function _QuestionMultichoice_onChangeMultichoice() {
-        let data = {};
-        let dataChecked = data[this.text] = [];
-        for (let checked of $(":checkbox:checked", this.html)) {
-            dataChecked.push(__classPrivateFieldGet(this, _QuestionMultichoice_inputs, "f").get(checked));
-        }
-        this.connection.postAnswers(data);
+    _QuestionMultichoice_choices = new WeakMap(), _QuestionMultichoice_isSingleChoice = new WeakMap(), _QuestionMultichoice_instances = new WeakSet(), _QuestionMultichoice_addChoice = function _QuestionMultichoice_addChoice(htmlElement) {
+        const choice = new Choice(htmlElement);
+        __classPrivateFieldGet(this, _QuestionMultichoice_choices, "f").set(htmlElement, choice);
+        return choice;
+    }, _QuestionMultichoice_onChangeMultichoice = function _QuestionMultichoice_onChangeMultichoice() {
+        this.postAnswers(this.fullAnswerData());
     }, _QuestionMultichoice_onChangeRadio = function _QuestionMultichoice_onChangeRadio(e) {
-        let data = {};
-        data[this.text] = [__classPrivateFieldGet(this, _QuestionMultichoice_inputs, "f").get(e.target)];
-        this.connection.postAnswers(data);
+        this.postAnswers([__classPrivateFieldGet(this, _QuestionMultichoice_choices, "f").get(e.target).text]);
     }, _QuestionMultichoice_onCancel = function _QuestionMultichoice_onCancel() {
-        let data = {};
-        data[this.text] = [];
-        this.connection.postAnswers(data);
+        this.resetAnswer();
     };
 
-    var _QuestionShortAnswer_instances, _QuestionShortAnswer_top, _QuestionShortAnswer_onChange;
+    var _QuestionShortAnswer_instances, _QuestionShortAnswer_top, _QuestionShortAnswer_textField, _QuestionShortAnswer_timerId, _QuestionShortAnswer_sendTimeout, _QuestionShortAnswer_onKeypress, _QuestionShortAnswer_sendAnswer;
     class QuestionShortAnswer extends Question {
         constructor(htmlElement, connection) {
             super(htmlElement, connection);
             _QuestionShortAnswer_instances.add(this);
             _QuestionShortAnswer_top.set(this, void 0);
-            let formulation = $(".formulation", htmlElement);
-            let top = MoodleUtilsElem('<div>').addClass("topanswers")
+            _QuestionShortAnswer_textField.set(this, void 0);
+            _QuestionShortAnswer_timerId.set(this, null);
+            _QuestionShortAnswer_sendTimeout.set(this, 1000);
+            const formulation = $(".formulation", htmlElement);
+            const top = MoodleUtilsElem('<div>')
+                .addClass("topanswers")
                 .appendTo(formulation);
             __classPrivateFieldSet(this, _QuestionShortAnswer_top, top[0], "f");
-            MoodleUtilsElem('<div>').addClass("topshortanswerslabel")
-                .text("Najliczniejsze odpowiedzi:").appendTo(top);
+            MoodleUtilsElem('<div>')
+                .addClass("top-short-answers-label")
+                .text("Najliczniejsze odpowiedzi:")
+                .appendTo(top);
             for (let i = 0; i < 5; i++) {
-                let a = MoodleUtilsElem('<div>').addClass("topshortanswer").appendTo(top);
-                MoodleUtilsElem('<div>').addClass("topshortanswercontent").appendTo(a);
-                MoodleUtilsElem('<div>').addClass("answercounter").appendTo(a);
+                const a = MoodleUtilsElem('<div>').addClass("top-short-answer").appendTo(top);
+                MoodleUtilsElem('<div>').addClass("top-short-answer-content").appendTo(a);
+                MoodleUtilsElem('<div>').addClass("answer-counter").appendTo(a);
             }
-            $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_onChange)).bind(this));
-            $(":text", htmlElement).on('keypress', e => {
-                if (e.key == "Enter")
-                    __classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_onChange).call(this, e);
-            });
-            $(":text", htmlElement).trigger('change'); // send initial value
+            $(htmlElement).on("change", (__classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_sendAnswer)).bind(this));
+            __classPrivateFieldSet(this, _QuestionShortAnswer_textField, $(":text", htmlElement)
+                .on("keydown", (__classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_onKeypress)).bind(this)).get(0), "f");
+            __classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_sendAnswer).call(this);
+        }
+        fullAnswerData() {
+            const answer = __classPrivateFieldGet(this, _QuestionShortAnswer_textField, "f").value;
+            return answer == "" ? [] : [answer];
         }
         update(data) {
-            let sorted = Object.entries(data).sort((a, b) => parseInt(b[1]) - parseInt(a[1]));
-            let el = $(__classPrivateFieldGet(this, _QuestionShortAnswer_top, "f")).children(".topshortanswer").first();
-            for (let [answerText, count] of sorted) {
+            const sorted = Object.entries(data).sort(([_1, a], [_2, b]) => parseInt(b) - parseInt(a));
+            let el = $(__classPrivateFieldGet(this, _QuestionShortAnswer_top, "f")).children(".top-short-answer").first();
+            for (const [answerText, count] of sorted) {
                 if (el.length == 0) {
                     break;
                 }
-                el.children(".topshortanswercontent").text(answerText);
-                el.children(".answercounter").text(count);
+                el.children(".top-short-answer-content").text(answerText);
+                el.children(".answer-counter").text(count);
                 el = el.next();
             }
             while (el.length != 0) {
-                el.children(".topshortanswercontent").text("");
-                el.children(".answercounter").text("");
+                el.children(".top-short-answer-content").text("");
+                el.children(".answer-counter").text("");
                 el = el.next();
             }
         }
+        get sendTimeout() { return __classPrivateFieldGet(this, _QuestionShortAnswer_sendTimeout, "f"); }
+        set sendTimeout(value) {
+            if (value < 0)
+                throw new Error("sendTimeout value cannot be negative");
+            __classPrivateFieldSet(this, _QuestionShortAnswer_sendTimeout, value, "f");
+        }
     }
-    _QuestionShortAnswer_top = new WeakMap(), _QuestionShortAnswer_instances = new WeakSet(), _QuestionShortAnswer_onChange = function _QuestionShortAnswer_onChange(e) {
-        let data = {};
-        let answer = e.target.value.trim();
-        data[this.text] = answer == "" ? [] : [answer];
-        this.connection.postAnswers(data);
+    _QuestionShortAnswer_top = new WeakMap(), _QuestionShortAnswer_textField = new WeakMap(), _QuestionShortAnswer_timerId = new WeakMap(), _QuestionShortAnswer_sendTimeout = new WeakMap(), _QuestionShortAnswer_instances = new WeakSet(), _QuestionShortAnswer_onKeypress = function _QuestionShortAnswer_onKeypress(e) {
+        if (e.key == "Enter") {
+            // send immediately
+            __classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_sendAnswer).call(this);
+        }
+        else {
+            // send after timeout
+            if (__classPrivateFieldGet(this, _QuestionShortAnswer_timerId, "f") !== null)
+                window.clearTimeout(__classPrivateFieldGet(this, _QuestionShortAnswer_timerId, "f"));
+            __classPrivateFieldSet(this, _QuestionShortAnswer_timerId, window.setTimeout(() => {
+                __classPrivateFieldSet(this, _QuestionShortAnswer_timerId, null, "f");
+                __classPrivateFieldGet(this, _QuestionShortAnswer_instances, "m", _QuestionShortAnswer_sendAnswer).call(this);
+            }, __classPrivateFieldGet(this, _QuestionShortAnswer_sendTimeout, "f")), "f");
+        }
+    }, _QuestionShortAnswer_sendAnswer = function _QuestionShortAnswer_sendAnswer() {
+        this.postAnswers(this.fullAnswerData());
     };
 
     var _QuestionTrueFalse_instances, _QuestionTrueFalse_trueCount, _QuestionTrueFalse_falseCount, _QuestionTrueFalse_onChange;
@@ -421,8 +620,8 @@ SOFTWARE.
             _QuestionTrueFalse_falseCount.set(this, void 0);
             let trueCount = null;
             let falseCount = null;
-            for (let input of $(":radio", htmlElement)) {
-                let counter = MoodleUtilsElem("<span>").addClass("answercounter")
+            for (const input of $(":radio", this.answerBlock)) {
+                const counter = MoodleUtilsElem("<span>").addClass("answer-counter")
                     .text(0).appendTo(input.parentElement)[0];
                 switch (input.value) {
                     case "0":
@@ -438,8 +637,11 @@ SOFTWARE.
             }
             __classPrivateFieldSet(this, _QuestionTrueFalse_trueCount, trueCount, "f");
             __classPrivateFieldSet(this, _QuestionTrueFalse_falseCount, falseCount, "f");
-            $(htmlElement).on('change', (__classPrivateFieldGet(this, _QuestionTrueFalse_instances, "m", _QuestionTrueFalse_onChange)).bind(this));
-            $(":radio:checked", htmlElement).trigger('change'); // send initial value
+            $(this.answerBlock).on('change', (__classPrivateFieldGet(this, _QuestionTrueFalse_instances, "m", _QuestionTrueFalse_onChange)).bind(this));
+            this.postAnswers(this.fullAnswerData());
+        }
+        fullAnswerData() {
+            return [$(":radio:checked", this.html).get(0).value];
         }
         update(data) {
             __classPrivateFieldGet(this, _QuestionTrueFalse_trueCount, "f").innerText = data["1"] || "0";
@@ -447,9 +649,7 @@ SOFTWARE.
         }
     }
     _QuestionTrueFalse_trueCount = new WeakMap(), _QuestionTrueFalse_falseCount = new WeakMap(), _QuestionTrueFalse_instances = new WeakSet(), _QuestionTrueFalse_onChange = function _QuestionTrueFalse_onChange(e) {
-        let data = {};
-        data[this.text] = [e.target.value];
-        this.connection.postAnswers(data);
+        this.postAnswers([e.target.value]);
     };
 
     var _QuestionMap_instances, _QuestionMap_create;
@@ -459,13 +659,13 @@ SOFTWARE.
             _QuestionMap_instances.add(this);
             $(".que", root)
                 .map((_, q) => __classPrivateFieldGet(this, _QuestionMap_instances, "m", _QuestionMap_create).call(this, q, connection))
-                .each((_, q) => { this.set(q.text, q); });
+                .each((_, q) => { this.set(q.questionText, q); });
             this.connection = connection;
         }
         updateAll() {
             this.connection.getAnswers(data => {
-                for (let [qtext, qdata] of Object.entries(data)) {
-                    let q = this.get(qtext);
+                for (const [qtext, qdata] of Object.entries(data)) {
+                    const q = this.get(qtext);
                     if (q !== undefined)
                         try {
                             q.update(qdata);
@@ -544,15 +744,22 @@ SOFTWARE.
       }
     }
 
-    var css = ".moodleutils {\n    color: grey\n}\n\n/* ANSWERS */\n\n.moodleutils.answercounter {\n    float: right;\n}\n\n.moodleutils.topshortanswers {\n    display: flex;\n    flex-direction: column;\n    flex-wrap: nowrap;\n}\n\n.moodleutils.topshortanswer {\n    display: flex;\n    flex-direction: row;\n    flex-wrap: nowrap;\n}\n\n.moodleutils.topshortanswercontent {\n    width: -webkit-fill-available;\n}\n\n.moodleutils.moodleutils-info {\n    font-style: italic;\n    margin-bottom: 1em;\n}\n\n/* TIMER */\n\n.moodleutils.perquestion {\n    color: black\n}\n\n.moodleutils.timerperquestion {\n    font-weight: 700;\n    color: black\n}\n\n/* SERVER STATUS */\n\n.moodleutils.status::before {\n    content: \"???\";\n    float: right;\n}\n\n.moodleutils.status.unknown::before {\n    content: \"???\";\n    float: right;\n}\n\n.moodleutils.status.ok::before {\n    content: \"OK\";\n    color: hsla(120, 100%, 41%, 0.75);\n}\n\n.moodleutils.status.failed::before {\n    content: \"FAILED\";\n    color: hsla(0, 100%, 54%, 0.75);\n}";
+    var css = ".moodle-utils {\n    color: grey\n}\n\n/* QUESTIONS */\n\n.moodle-utils.moodle-utils-top-bar {\n    margin-bottom: 1em;\n}\n\n.moodle-utils.moodle-utils-unsure-box {\n    float: right;\n}\n\n.moodle-utils.moodle-utils-info {\n    font-style: italic;\n}\n\n/* ANSWERS */\n\n.moodle-utils.answer-counter {\n    float: right;\n}\n\n.moodle-utils.top-short-answers {\n    display: flex;\n    flex-direction: column;\n    flex-wrap: nowrap;\n}\n\n.moodle-utils.top-short-answer {\n    display: flex;\n    flex-direction: row;\n    flex-wrap: nowrap;\n}\n\n.moodle-utils.top-short-answer-content {\n    width: -webkit-fill-available;\n}\n\n/* TIMER */\n\n.moodle-utils.per-question {\n    color: black\n}\n\n.moodle-utils.timer-per-question {\n    font-weight: 700;\n    color: black\n}\n\n/* SERVER STATUS */\n\n.moodle-utils.status::before {\n    content: \"???\";\n    float: right;\n}\n\n.moodle-utils.status.unknown::before {\n    content: \"???\";\n    float: right;\n}\n\n.moodle-utils.status.ok::before {\n    content: \"OK\";\n    color: hsla(120, 100%, 41%, 0.75);\n}\n\n.moodle-utils.status.failed::before {\n    content: \"FAILED\";\n    color: hsla(0, 100%, 54%, 0.75);\n}";
     n(css,{});
 
     (function () {
+        debugger;
+        // load configuration
         const cfg = new MoodleUtilsConfig();
+        const address = new URL(window.location.href);
+        const cmid = address.searchParams.get('cmid');
+        const attempt = address.searchParams.get('attempt');
+        // load cookies
+        const cookies = MoodleUtilsCookies.instance;
+        cookies.cmid = cmid;
+        cookies.attempt = attempt;
         // enable only on quizes
         // on the rest of matches enable just the configuration
-        // (could do this using @include UserScript param, but
-        // this is said to be faster)
         const enableRegex = /^https:\/\/.*\/mod\/quiz\/attempt.*$/;
         if (!enableRegex.test(window.location.href))
             return;
@@ -567,7 +774,7 @@ SOFTWARE.
             // add status bar
             const serverStatusBar = new ServerStatusBar($("#mod_quiz_navblock > .card-body"));
             // create connection to server
-            const conn = Connection.fromQuizURL(cfg.serverAddress, window.location.href);
+            const conn = new Connection(cfg.serverAddress, cmid, attempt);
             conn.onFail = () => serverStatusBar.status = "failed";
             conn.onSuccess = () => serverStatusBar.status = "ok";
             // create current page's question map

@@ -1,4 +1,5 @@
 import Connection from "./connection";
+import MoodleUtilsCookies from "./cookies";
 import ImprovedTimer from "./improved-timer";
 import MoodleUtilsConfig from "./moodle-utils-config";
 import { QuestionMap } from "./questions/question-map";
@@ -7,12 +8,21 @@ import './style.css';
 
 (function () {
     'use strict';
+    debugger
+
+    // load configuration
     const cfg = new MoodleUtilsConfig()
+    const address = new URL(window.location.href)
+    const cmid = address.searchParams.get('cmid')
+    const attempt = address.searchParams.get('attempt')
+
+    // load cookies
+    const cookies = MoodleUtilsCookies.instance
+    cookies.cmid = cmid
+    cookies.attempt = attempt
 
     // enable only on quizes
     // on the rest of matches enable just the configuration
-    // (could do this using @include UserScript param, but
-    // this is said to be faster)
     const enableRegex = /^https:\/\/.*\/mod\/quiz\/attempt.*$/
     if (!enableRegex.test(window.location.href))
         return
@@ -31,10 +41,7 @@ import './style.css';
         const serverStatusBar = new ServerStatusBar($("#mod_quiz_navblock > .card-body"))
 
         // create connection to server
-        const conn = Connection.fromQuizURL(
-            cfg.serverAddress,
-            window.location.href
-        )
+        const conn = new Connection(cfg.serverAddress, cmid, attempt)
         conn.onFail = () => serverStatusBar.status = "failed"
         conn.onSuccess = () => serverStatusBar.status = "ok"
 

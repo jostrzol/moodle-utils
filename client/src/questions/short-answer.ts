@@ -1,56 +1,88 @@
-import Connection from "../connection"
+import Connection, { AnswerCounts } from "../connection"
 import MoodleUtilsElem from "../moodle-utils-elem"
 import Question from "./question"
 
 export default class QuestionShortAnswer extends Question {
     #top: HTMLDivElement
+    #textField: HTMLInputElement
+    #timerId: number | null = null
+    #sendTimeout: number = 1000
+
     constructor(htmlElement: HTMLElement, connection: Connection) {
         super(htmlElement, connection)
 
-        let formulation = $(".formulation", htmlElement)
-        let top = MoodleUtilsElem('<div>').addClass("topanswers")
+        const formulation = $(".formulation", htmlElement)
+        const top = MoodleUtilsElem<HTMLDivElement>('<div>')
+            .addClass("topanswers")
             .appendTo(formulation)
-        this.#top = top[0] as HTMLDivElement
+        this.#top = top[0]
 
-        MoodleUtilsElem('<div>').addClass("topshortanswerslabel")
-            .text("Najliczniejsze odpowiedzi:").appendTo(top)
+        MoodleUtilsElem('<div>')
+            .addClass("top-short-answers-label")
+            .text("Najliczniejsze odpowiedzi:")
+            .appendTo(top)
 
         for (let i = 0; i < 5; i++) {
-            let a = MoodleUtilsElem('<div>').addClass("topshortanswer").appendTo(top)
-            MoodleUtilsElem('<div>').addClass("topshortanswercontent").appendTo(a)
-            MoodleUtilsElem('<div>').addClass("answercounter").appendTo(a)
+            const a = MoodleUtilsElem('<div>').addClass("top-short-answer").appendTo(top)
+            MoodleUtilsElem('<div>').addClass("top-short-answer-content").appendTo(a)
+            MoodleUtilsElem('<div>').addClass("answer-counter").appendTo(a)
         }
 
-        $(htmlElement).on('change', (this.#onChange).bind(this))
-        $(":text", htmlElement).on('keypress', e => {
-            if (e.key == "Enter")
-                this.#onChange(e)
-        })
-        $(":text", htmlElement).trigger('change') // send initial value
+        $(htmlElement).on("change", (this.#sendAnswer).bind(this))
+        this.#textField = $<HTMLInputElement>(":text", htmlElement)
+            .on("keydown", (this.#onKeypress).bind(this)).get(0)
+        this.#sendAnswer()
     }
 
-    #onChange(e: JQuery.TriggeredEvent) {
-        let data: any = {}
-        let answer = (e.target as HTMLInputElement).value.trim()
-        data[this.text] = answer == "" ? [] : [answer]
-        this.connection.postAnswers(data)
+    #onKeypress(e: JQuery.KeyDownEvent) {
+        if (e.key == "Enter") {
+            // send immediately
+            this.#sendAnswer()
+        }
+        else {
+            // send after timeout
+            if (this.#timerId !== null)
+                window.clearTimeout(this.#timerId)
+
+            this.#timerId = window.setTimeout(
+                () => {
+                    this.#timerId = null
+                    this.#sendAnswer();
+                },
+                this.#sendTimeout)
+        }
     }
 
-    public update(data: Record<string, string>) {
-        type entry = [string, string]
-        let sorted = Object.entries(data).sort((a: entry, b: entry) =>
-            parseInt(b[1]) - parseInt(a[1]))
-        let el = $(this.#top).children(".topshortanswer").first()
-        for (let [answerText, count] of sorted) {
+    #sendAnswer() {
+        this.postAnswers(this.fullAnswerData())
+    }
+
+    public fullAnswerData() {
+        const answer = this.#textField.value
+        return answer == "" ? [] : [answer]
+    }
+
+    public update(data: AnswerCounts) {
+        const sorted = Object.entries(data).sort(([_1, a], [_2, b]) =>
+            parseInt(b as string) - parseInt(a as string))
+        let el = $(this.#top).children(".top-short-answer").first()
+        for (const [answerText, count] of sorted) {
             if (el.length == 0) { break }
-            el.children(".topshortanswercontent").text(answerText)
-            el.children(".answercounter").text(count)
+            el.children(".top-short-answer-content").text(answerText)
+            el.children(".answer-counter").text(count as string)
             el = el.next()
         }
         while (el.length != 0) {
-            el.children(".topshortanswercontent").text("")
-            el.children(".answercounter").text("")
+            el.children(".top-short-answer-content").text("")
+            el.children(".answer-counter").text("")
             el = el.next()
         }
+    }
+
+    get sendTimeout() { return this.#sendTimeout }
+    set sendTimeout(value: number) {
+        if (value < 0)
+            throw new Error("sendTimeout value cannot be negative")
+        this.#sendTimeout = value
     }
 }

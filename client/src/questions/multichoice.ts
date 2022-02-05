@@ -1,59 +1,79 @@
 import Connection from "../connection"
 import MoodleUtilsElem from "../moodle-utils-elem"
+import OnHTMLElement from "../on-html-element"
 import Question from "./question"
 
+class Choice extends OnHTMLElement<HTMLInputElement> {
+    #text: string
+    #counter: HTMLSpanElement
+
+    constructor(htmlElement: HTMLInputElement) {
+        super(htmlElement)
+
+        const label = $("~ .d-flex", htmlElement)
+        this.#text = $("div.flex-fill", label).text()
+        this.#counter = MoodleUtilsElem("<span>")
+            .addClass("answer-counter")
+            .text(0)
+            .appendTo(label)
+            .get(0)
+    }
+
+    setCount(count: string) { this.#counter.innerText = count }
+    get text() { return this.#text }
+}
+
 export default class QuestionMultichoice extends Question {
-    #counts = new Map<string, HTMLSpanElement>()
-    #inputs = new Map<HTMLInputElement, string>()
+    #choices = new Map<HTMLInputElement, Choice>()
+    #isSingleChoice: boolean
+    get isSingleChoice() { return this.#isSingleChoice }
+
+    #addChoice(htmlElement: HTMLInputElement) {
+        const choice = new Choice(htmlElement)
+        this.#choices.set(htmlElement, choice)
+        return choice
+    }
+
     constructor(htmlElement: HTMLElement, connection: Connection) {
         super(htmlElement, connection)
-        for (let input of $("[value!=-1]:radio, :checkbox", htmlElement) as JQuery<HTMLInputElement>) {
-            let label = $("~ .d-flex", input)
+        $<HTMLInputElement>("[value!=-1]:radio, :checkbox", this.answerBlock)
+            .map((_, c) => { this.#addChoice(c) })
 
-            let counter = MoodleUtilsElem("<span>").addClass("answercounter").text(0).appendTo(label)[0]
-            let answerText = $("div.flex-fill", label).text()
-
-            this.#counts.set(answerText, counter)
-            this.#inputs.set(input, answerText)
-        }
-
-        let cancel = $(".qtype_multichoice_clearchoice a", htmlElement)[0]
+        const cancel = $(".qtype_multichoice_clearchoice a", this.answerBlock)
         // no cancel in multichoice with multiple answers
-        if (cancel) {
-            $(htmlElement).on('change', (this.#onChangeRadio).bind(this))
-            $(cancel).on('click', (this.#onCancel).bind(this))
-            $("[value!=-1]:radio:checked", htmlElement).trigger('change') // send initial value
+        if (cancel.length > 0) {
+            this.#isSingleChoice = true
+            $(this.answerBlock).on('change', (this.#onChangeRadio).bind(this))
+            cancel.on('click', (this.#onCancel).bind(this))
         } else {
-            $(htmlElement).on('change', (this.#onChangeMultichoice).bind(this))
-            $(":checkbox:checked", htmlElement).trigger('change') // send initial value
+            this.#isSingleChoice = false
+            $(this.answerBlock).on('change', (this.#onChangeMultichoice).bind(this))
         }
+
+        this.postAnswers(this.fullAnswerData())
     }
 
     #onChangeMultichoice() {
-        let data: any = {}
-        let dataChecked: string[] = data[this.text] = []
-        for (let checked of $(":checkbox:checked", this.html) as JQuery<HTMLInputElement>) {
-            dataChecked.push(this.#inputs.get(checked)!)
-        }
-        this.connection.postAnswers(data)
+        this.postAnswers(this.fullAnswerData())
     }
 
     #onChangeRadio(e: JQuery.TriggeredEvent) {
-        let data: any = {}
-        data[this.text] = [this.#inputs.get(e.target as HTMLInputElement)]
-        this.connection.postAnswers(data)
+        this.postAnswers([this.#choices.get(e.target)!.text])
     }
 
     #onCancel() {
-        let data: any = {}
-        data[this.text] = []
-        this.connection.postAnswers(data)
+        this.resetAnswer()
+    }
+
+    public fullAnswerData() {
+        return $<HTMLInputElement>(":checked[value!=-1]", this.answerBlock)
+            .map((_, e) => this.#choices.get(e)!.text)
+            .get()
     }
 
     public update(data: Record<string, string>) {
-        for (let [answerText, counter] of this.#counts) {
-            let count = data[answerText] || "0"
-            counter.innerText = count
+        for (const choice of this.#choices.values()) {
+            choice.setCount(data[choice.text] || "0")
         }
     }
 }

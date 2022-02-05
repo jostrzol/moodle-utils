@@ -1,5 +1,4 @@
 import Connection from "../connection"
-import MoodleUtilsElem from "../moodle-utils-elem"
 import OnHTMLElement from "../on-html-element"
 import Question from "./question"
 
@@ -31,7 +30,7 @@ export class Option extends OnHTMLElement {
 }
 
 export class GapSelectPlace extends OnHTMLElement<HTMLSelectElement> {
-    static #nameValidator = /^place\d+$/
+    static get #nameValidator(): RegExp { return /^place\d+$/ }
     static #isName(str: string) {
         return GapSelectPlace.#nameValidator.test(str)
     }
@@ -68,16 +67,12 @@ export class GapSelectPlace extends OnHTMLElement<HTMLSelectElement> {
     }
 
     #onChange(e: JQuery.TriggeredEvent) {
-        const answers: string[] = []
-        const selected = this.selected
-        if (selected !== null)
-            answers.push(selected.value)
+        this.parent.postAnswers(this.fullAnswerData())
+    }
 
-        this.parent.connection.postAnswers({
-            [this.parent.text]: {
-                [this.#name]: answers
-            }
-        })
+    public fullAnswerData() {
+        const selected = this.selected
+        return { [this.#name]: selected !== null ? [selected.value] : [] }
     }
 
     public update(data: Record<string, string>) {
@@ -108,22 +103,28 @@ export default class QuestionGapSelect extends Question {
 
     constructor(htmlElement: HTMLElement, connection: Connection) {
         super(htmlElement, connection)
-        $("select", htmlElement)
-            .each((_, p) => { this.#addPlace(p as HTMLSelectElement) })
+        $<HTMLSelectElement>("select", htmlElement)
+            .each((_, p) => { this.#addPlace(p) })
 
-
-        MoodleUtilsElem("<div>").addClass("moodleutils-info")
-            .text("(numbers in brackets show answer counts)")
-            .prependTo($(".formulation", htmlElement))
+        this.setInfoText("(numbers in brackets show answer counts)")
+        this.postAnswers(this.fullAnswerData())
     }
 
     protected static extractText(htmlElement: HTMLElement): string {
         return $(".qtext", htmlElement).clone().find(".control").remove().end().text()
     }
 
+    public fullAnswerData() {
+        const result: any = {}
+        for (const [placeText, place] of this.#places) {
+            Object.assign(result, place.fullAnswerData())
+        }
+        return result
+    }
+
     public update(data: Record<string, Record<string, string>>) {
         for (const [placeText, place] of this.#places) {
-            place.update(data[placeText])
+            place.update(data[placeText] || {})
         }
     }
 }

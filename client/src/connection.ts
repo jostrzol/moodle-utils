@@ -1,6 +1,18 @@
 import Question from "./questions/question"
 
-type MoodleUtilsEndpoints = "gather-form" | "get-answers"
+export type MoodleUtilsEndpoints = "gather-form" | "get-answers" | "reset-answers"
+
+export class NoURLQueryError extends Error {
+    queryName: string
+    constructor(queryName: string) {
+        super(`required '${queryName}' query not found in url`)
+        this.queryName = queryName
+    }
+}
+
+export type PostAnswerData = { [key: string]: PostAnswerData | string[] }
+export type AnswerCounts = { [key: string]: AnswerCounts | string }
+
 
 export default class Connection {
     #serverAddress: string
@@ -22,9 +34,9 @@ export default class Connection {
         const cmid = parsedUrl.searchParams.get("cmid")
         const attempt = parsedUrl.searchParams.get("attempt")
         if (cmid === null) {
-            throw new Error("required 'cmid' query not found in url");
+            throw new NoURLQueryError('cmid')
         } else if (attempt === null) {
-            throw new Error("required 'attempt' query not found in url");
+            throw new NoURLQueryError('attempt')
         }
         return new Connection(serverAddress, cmid, attempt)
     }
@@ -37,7 +49,7 @@ export default class Connection {
         return `${this.#serverAddress}/${endpointName}?${this.#urlId}`
     }
 
-    public postAnswers(data: Object): JQuery.jqXHR {
+    public postAnswers(data: PostAnswerData): JQuery.jqXHR {
         return $.ajax({
             url: this.#endpointUrl("gather-form"),
             type: 'post',
@@ -47,11 +59,22 @@ export default class Connection {
         }).fail(this.onFail).done(this.onSuccess);
     }
 
-    public getAnswers(callback: (data: Record<string, any>) => void, ...questions: Question[]): JQuery.jqXHR {
+    public getAnswers(callback: (data: AnswerCounts) => void, ...questions: Question[]): JQuery.jqXHR {
         let url = this.#endpointUrl("get-answers")
-        for (let q of questions) {
-            url += `&q=${encodeURIComponent(q.text)}`
+        for (const q of questions) {
+            url += `&q=${encodeURIComponent(q.questionText)}`
         }
         return $.getJSON(url, callback).fail(this.onFail).done(this.onSuccess)
+    }
+
+    public resetAnswers(...questions: Question[]): JQuery.jqXHR {
+        let url = this.#endpointUrl("reset-answers")
+        for (const q of questions) {
+            url += `&q=${encodeURIComponent(q.questionText)}`
+        }
+        return $.ajax({
+            url: url,
+            type: 'delete',
+        }).fail(this.onFail).done(this.onSuccess);
     }
 }

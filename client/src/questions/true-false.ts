@@ -11,8 +11,8 @@ export default class QuestionTrueFalse extends Question {
 
         let trueCount: HTMLSpanElement | null = null
         let falseCount: HTMLSpanElement | null = null
-        for (let input of $(":radio", htmlElement) as JQuery<HTMLInputElement>) {
-            let counter = MoodleUtilsElem("<span>").addClass("answercounter")
+        for (const input of $<HTMLInputElement>(":radio", this.answerBlock)) {
+            const counter = MoodleUtilsElem("<span>").addClass("answer-counter")
                 .text(0).appendTo(input.parentElement!)[0]
 
             switch (input.value) {
@@ -34,14 +34,16 @@ export default class QuestionTrueFalse extends Question {
         this.#falseCount = falseCount
 
 
-        $(htmlElement).on('change', (this.#onChange).bind(this))
-        $(":radio:checked", htmlElement).trigger('change') // send initial value
+        $(this.answerBlock).on('change', (this.#onChange).bind(this))
+        this.postAnswers(this.fullAnswerData())
     }
 
     #onChange(e: JQuery.TriggeredEvent) {
-        let data: any = {}
-        data[this.text] = [(e.target as HTMLInputElement).value]
-        this.connection.postAnswers(data)
+        this.postAnswers([e.target.value])
+    }
+
+    public fullAnswerData() {
+        return [$<HTMLInputElement>(":radio:checked", this.html).get(0).value]
     }
 
     public update(data: Record<string, string>) {

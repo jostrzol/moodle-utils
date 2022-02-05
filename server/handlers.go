@@ -61,6 +61,17 @@ func getAnswersHandler(w http.ResponseWriter, r *http.Request, quizMap qm.QuizMa
 	return nil
 }
 
+func resetAnswersHandler(w http.ResponseWriter, r *http.Request, quizMap qm.QuizMap) error {
+	vars := mux.Vars(r)
+	err := r.ParseForm()
+	if err != nil {
+		return fmt.Errorf("resetAnswersHandler: parse form: %w", err)
+	}
+
+	quizMap.ResetAnswer(vars["cmid"], vars["attempt"], r.Form["q"])
+	return nil
+}
+
 // ErrHTTP represtents an error that can be replied to HTTP client
 type ErrHTTP struct {
 	error
@@ -142,6 +153,7 @@ func injectHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
+		// w.Header().Set("Access-Control-Allow-Private-Network", "true")
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})
