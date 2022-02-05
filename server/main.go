@@ -64,14 +64,17 @@ func main() {
 	r := mux.NewRouter()
 
 	sWithQuiz := r.Queries("cmid", "{cmid:[0-9]+}").Subrouter()
-	sWithQuiz.Use(injectHeaders)
+	sWithQuiz.Use(injectCORSHeaders)
 	sWithQuiz.Use(mux.CORSMethodMiddleware(sWithQuiz))
 	sWithQuiz.Use(handleOptions)
+
+	sWithQuizToJSON := sWithQuiz.NewRoute().Subrouter()
+	sWithQuizToJSON.Use(injectContentTypeHeader)
 
 	sWithQuiz.HandleFunc("/gather-form", handlerWrapper(quizMap, gatherFormHandler)).
 		Methods(http.MethodPost, http.MethodOptions).
 		Queries("attempt", "{attempt:[0-9]+}")
-	sWithQuiz.HandleFunc("/get-answers", handlerWrapper(quizMap, getAnswersHandler)).
+	sWithQuizToJSON.HandleFunc("/get-answers", handlerWrapper(quizMap, getAnswersHandler)).
 		Methods(http.MethodGet, http.MethodOptions)
 	sWithQuiz.HandleFunc("/reset-answers", handlerWrapper(quizMap, resetAnswersHandler)).
 		Methods(http.MethodDelete, http.MethodOptions).

@@ -13,13 +13,16 @@ export class NoURLQueryError extends Error {
 export type PostAnswerData = { [key: string]: PostAnswerData | string[] }
 export type AnswerCounts = { [key: string]: AnswerCounts | string }
 
+type FailCallback = JQuery.Deferred.CallbackBase<JQuery.jqXHR<any>, JQuery.Ajax.ErrorTextStatus, string, never>
+type SuccessCallback = JQuery.Deferred.CallbackBase<any, JQuery.Ajax.SuccessTextStatus, JQuery.jqXHR<any>, never>
+
 
 export default class Connection {
     #serverAddress: string
     #cmid: string
     #attemptId: string
-    onFail: () => void = () => { }
-    onSuccess: () => void = () => { }
+    onFail: FailCallback = () => { }
+    onSuccess: SuccessCallback = () => { }
 
     constructor(serverAddress: string, cmid: string, attemptId: string) {
         // trim trailing slashes
@@ -55,7 +58,6 @@ export default class Connection {
             type: 'post',
             data: JSON.stringify(data),
             contentType: "application/json",
-            dataType: "json",
         }).fail(this.onFail).done(this.onSuccess);
     }
 

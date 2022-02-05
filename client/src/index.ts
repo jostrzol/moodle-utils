@@ -8,7 +8,6 @@ import './style.css';
 
 (function () {
     'use strict';
-    debugger
 
     // load configuration
     const cfg = new MoodleUtilsConfig()
@@ -29,7 +28,8 @@ import './style.css';
 
     Y.on("domready", function () {
         // add timer
-        if ($(".qnbutton.notyetanswered").length != 0
+        if (cfg.improveTimer
+            && $(".qnbutton.notyetanswered").length != 0
             && M.mod_quiz.timer.endtime != 0)
             new ImprovedTimer(M.mod_quiz.timer)
 
@@ -42,8 +42,10 @@ import './style.css';
 
         // create connection to server
         const conn = new Connection(cfg.serverAddress, cmid, attempt)
-        conn.onFail = () => serverStatusBar.status = "failed"
         conn.onSuccess = () => serverStatusBar.status = "ok"
+        conn.onFail = (t, u, v, r) => {
+            serverStatusBar.status = "failed"
+        }
 
         // create current page's question map
         const qmap = new QuestionMap(document.body, conn)

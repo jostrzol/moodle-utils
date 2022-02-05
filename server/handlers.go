@@ -149,11 +149,16 @@ func handleOptions(next http.Handler) http.Handler {
 	})
 }
 
-func injectHeaders(next http.Handler) http.Handler {
+func injectCORSHeaders(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Headers", "*")
-		// w.Header().Set("Access-Control-Allow-Private-Network", "true")
+		next.ServeHTTP(w, r)
+	})
+}
+
+func injectContentTypeHeader(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		next.ServeHTTP(w, r)
 	})

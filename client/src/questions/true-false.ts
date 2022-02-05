@@ -43,7 +43,8 @@ export default class QuestionTrueFalse extends Question {
     }
 
     public fullAnswerData() {
-        return [$<HTMLInputElement>(":radio:checked", this.html).get(0).value]
+        const checked = $<HTMLInputElement>(":radio:checked", this.answerBlock).get(0)
+        return checked === undefined ? [] : [checked.value]
     }
 
     public update(data: Record<string, string>) {

@@ -110,7 +110,6 @@ SOFTWARE.
                 type: 'post',
                 data: JSON.stringify(data),
                 contentType: "application/json",
-                dataType: "json",
             }).fail(this.onFail).done(this.onSuccess);
         }
         getAnswers(callback, ...questions) {
@@ -271,12 +270,19 @@ SOFTWARE.
                     serverAddress: {
                         type: 'text',
                         default: ""
-                    }
+                    },
+                    improveTimer: {
+                        type: 'checkbox',
+                        default: true,
+                    },
                 }
             }), "f");
         }
         get serverAddress() {
             return __classPrivateFieldGet(this, _MoodleUtilsConfig_config, "f").get('serverAddress');
+        }
+        get improveTimer() {
+            return __classPrivateFieldGet(this, _MoodleUtilsConfig_config, "f").get('improveTimer');
         }
     }
     _MoodleUtilsConfig_config = new WeakMap();
@@ -641,7 +647,8 @@ SOFTWARE.
             this.postAnswers(this.fullAnswerData());
         }
         fullAnswerData() {
-            return [$(":radio:checked", this.html).get(0).value];
+            const checked = $(":radio:checked", this.answerBlock).get(0);
+            return checked === undefined ? [] : [checked.value];
         }
         update(data) {
             __classPrivateFieldGet(this, _QuestionTrueFalse_trueCount, "f").innerText = data["1"] || "0";
@@ -748,7 +755,6 @@ SOFTWARE.
     n(css,{});
 
     (function () {
-        debugger;
         // load configuration
         const cfg = new MoodleUtilsConfig();
         const address = new URL(window.location.href);
@@ -765,7 +771,8 @@ SOFTWARE.
             return;
         Y.on("domready", function () {
             // add timer
-            if ($(".qnbutton.notyetanswered").length != 0
+            if (cfg.improveTimer
+                && $(".qnbutton.notyetanswered").length != 0
                 && M.mod_quiz.timer.endtime != 0)
                 new ImprovedTimer(M.mod_quiz.timer);
             // return if no server address
@@ -775,8 +782,10 @@ SOFTWARE.
             const serverStatusBar = new ServerStatusBar($("#mod_quiz_navblock > .card-body"));
             // create connection to server
             const conn = new Connection(cfg.serverAddress, cmid, attempt);
-            conn.onFail = () => serverStatusBar.status = "failed";
             conn.onSuccess = () => serverStatusBar.status = "ok";
+            conn.onFail = (t, u, v, r) => {
+                serverStatusBar.status = "failed";
+            };
             // create current page's question map
             const qmap = new QuestionMap(document.body, conn);
             // refresh question map every second
