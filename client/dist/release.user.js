@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        moodle-utils
 // @description Displays time per question left
-// @namespace   https://github.com/Ogurczak
+// @namespace   https://github.com/jostrzol
 // @require     https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
 // @require     http://code.jquery.com/jquery-3.4.1.min.js
 // @match       https://*/mod/quiz/attempt*
 // @match       https://*/mod/quiz*
-// @match       https://github.com/Ogurczak/moodle-utils*
+// @match       https://github.com/jostrzol/moodle-utils*
 // @match       https://*.moodlecloud.com/*
 // @version     0.7.3
-// @homepage    https://github.com/Ogurczak/moodle-utils
-// @author      Ogurczak
+// @homepage    https://github.com/jostrzol/moodle-utils
+// @author      jostrzol
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
@@ -22,7 +22,7 @@
 /*
 MIT License
 
-Copyright (c) 2022 Ogurczak
+Copyright (c) 2022 jostrzol
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

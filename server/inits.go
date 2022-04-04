@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	qm "github.com/Ogurczak/moodle-utils/server/quizmap"
+	qm "github.com/jostrzol/moodle-utils/server/quizmap"
 	"github.com/mattn/go-colorable"
 	"github.com/sirupsen/logrus"
 	"github.com/snowzach/rotatefilehook"

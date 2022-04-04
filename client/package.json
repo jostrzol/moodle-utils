@@ -5,15 +5,15 @@
     "keywords": [
         "moodle"
     ],
-    "homepage": "https://github.com/Ogurczak/moodle-utils",
+    "homepage": "https://github.com/jostrzol/moodle-utils",
     "repository": {
         "type": "git",
-        "url": "github:Ogurczak/moodle-utils"
+        "url": "github:jostrzol/moodle-utils"
     },
     "bugs": {
-        "url": "https://github.com/Ogurczak/moodle-utils/issues"
+        "url": "https://github.com/jostrzol/moodle-utils/issues"
     },
-    "author": "Ogurczak",
+    "author": "jostrzol",
     "license": "MIT",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",

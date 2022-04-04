@@ -1,6 +1,6 @@
 {
-    "namespace": "https://github.com/Ogurczak",
-    "copyright": "2022, Ogurczak",
+    "namespace": "https://github.com/jostrzol",
+    "copyright": "2022, jostrzol",
     "require": [
         "https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js",
         "http://code.jquery.com/jquery-3.4.1.min.js"
@@ -8,7 +8,7 @@
     "match": [
         "https://*/mod/quiz/attempt*",
         "https://*/mod/quiz*",
-        "https://github.com/Ogurczak/moodle-utils*",
+        "https://github.com/jostrzol/moodle-utils*",
         "https://*.moodlecloud.com/*"
     ],
     "grant": [

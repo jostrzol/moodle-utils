@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"runtime/debug"
 
-	qm "github.com/Ogurczak/moodle-utils/server/quizmap"
 	"github.com/gorilla/mux"
+	qm "github.com/jostrzol/moodle-utils/server/quizmap"
 	"github.com/sirupsen/logrus"
 )
 
