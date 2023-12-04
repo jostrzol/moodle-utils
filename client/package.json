@@ -3,15 +3,15 @@
     "version": "0.7.3",
     "description": "Displays time per question left",
     "keywords": [
-        "moodle"
+        "moodle", "leon"
     ],
-    "homepage": "https://github.com/jostrzol/moodle-utils",
+    "homepage": "https://github.com/krisboorger/moodle-utils",
     "repository": {
         "type": "git",
-        "url": "github:jostrzol/moodle-utils"
+        "url": "github:krisboorger/moodle-utils"
     },
     "bugs": {
-        "url": "https://github.com/jostrzol/moodle-utils/issues"
+        "url": "https://github.com/krisboorger/moodle-utils/issues"
     },
     "author": "jostrzol, krisboorger",
     "license": "MIT",

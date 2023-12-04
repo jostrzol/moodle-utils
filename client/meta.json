@@ -1,5 +1,5 @@
 {
-    "namespace": "https://github.com/jostrzol",
+    "namespace": "https://github.com/krisboorger",
     "copyright": ["2022, jostrzol", "2023, krisboorger"],
     "require": [
         "https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js",
@@ -8,7 +8,7 @@
     "match": [
         "https://*/mod/quiz/attempt*",
         "https://*/mod/quiz*",
-        "https://github.com/jostrzol/moodle-utils*",
+        "https://github.com/krisboorger/moodle-utils*",
         "https://*.moodlecloud.com/*"
     ],
     "grant": [

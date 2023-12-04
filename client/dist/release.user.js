@@ -1,15 +1,15 @@
 // ==UserScript==
 // @name        moodle-utils
 // @description Displays time per question left
-// @namespace   https://github.com/jostrzol
+// @namespace   https://github.com/krisboorger
 // @require     https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
 // @require     http://code.jquery.com/jquery-3.4.1.min.js
 // @match       https://*/mod/quiz/attempt*
 // @match       https://*/mod/quiz*
-// @match       https://github.com/jostrzol/moodle-utils*
+// @match       https://github.com/krisboorger/moodle-utils*
 // @match       https://*.moodlecloud.com/*
 // @version     0.7.3
-// @homepage    https://github.com/jostrzol/moodle-utils
+// @homepage    https://github.com/krisboorger/moodle-utils
 // @author      jostrzol, krisboorger
 // @license     MIT
 // @grant       GM_getValue
