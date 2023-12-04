@@ -1,4 +1,4 @@
-module github.com/jostrzol/moodle-utils/server
+module github.com/krisboorger/moodle-utils/server
 
 go 1.16
 
