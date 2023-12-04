@@ -13,7 +13,7 @@
     "bugs": {
         "url": "https://github.com/jostrzol/moodle-utils/issues"
     },
-    "author": "jostrzol",
+    "author": "jostrzol, krisboorger",
     "license": "MIT",
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",

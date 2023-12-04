@@ -10,7 +10,7 @@
 // @match       https://*.moodlecloud.com/*
 // @version     0.7.3
 // @homepage    https://github.com/jostrzol/moodle-utils
-// @author      jostrzol
+// @author      jostrzol, krisboorger
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
@@ -23,6 +23,7 @@
 MIT License
 
 Copyright (c) 2022 jostrzol
+Copyright (c) 2023 krisboorger
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

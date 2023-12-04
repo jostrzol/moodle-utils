@@ -1,6 +1,6 @@
 {
     "namespace": "https://github.com/jostrzol",
-    "copyright": "2022, jostrzol",
+    "copyright": ["2022, jostrzol", "2023, krisboorger"],
     "require": [
         "https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js",
         "http://code.jquery.com/jquery-3.4.1.min.js"
