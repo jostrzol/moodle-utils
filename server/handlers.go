@@ -8,7 +8,7 @@ import (
 	"runtime/debug"
 
 	"github.com/gorilla/mux"
-	qm "github.com/jostrzol/moodle-utils/server/quizmap"
+	qm "github.com/krisboorger/moodle-utils/server/quizmap"
 	"github.com/sirupsen/logrus"
 )
 

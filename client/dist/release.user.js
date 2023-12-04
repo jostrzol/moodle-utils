@@ -1,16 +1,16 @@
 // ==UserScript==
 // @name        moodle-utils
 // @description Displays time per question left
-// @namespace   https://github.com/jostrzol
+// @namespace   https://github.com/krisboorger
 // @require     https://raw.github.com/odyniec/MonkeyConfig/master/monkeyconfig.js
 // @require     http://code.jquery.com/jquery-3.4.1.min.js
 // @match       https://*/mod/quiz/attempt*
 // @match       https://*/mod/quiz*
-// @match       https://github.com/jostrzol/moodle-utils*
+// @match       https://github.com/krisboorger/moodle-utils*
 // @match       https://*.moodlecloud.com/*
 // @version     0.7.3
-// @homepage    https://github.com/jostrzol/moodle-utils
-// @author      jostrzol
+// @homepage    https://github.com/krisboorger/moodle-utils
+// @author      jostrzol, krisboorger
 // @license     MIT
 // @grant       GM_getValue
 // @grant       GM_setValue
@@ -23,6 +23,7 @@
 MIT License
 
 Copyright (c) 2022 jostrzol
+Copyright (c) 2023 krisboorger
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -369,7 +370,7 @@ SOFTWARE.
             this.resetAnswer();
         else
             this.postAnswers(this.fullAnswerData());
-        // prevent any question-specific handlers 
+        // prevent any question-specific handlers
         // from firing on this checkbox
         e.stopPropagation();
     }, _Question_onUnload = function _Question_onUnload(e) {
