@@ -1,5 +1,6 @@
 # Moodle Utils
 This tampermonkey user script is intended as utility for moodle quizes.
+It also works for LeON quizes.
 
 ## Installation
 1. Install [Tampermonkey](https://chrome.google.com/webstore/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo "Tampermonkey in Google Chrome store").
