@@ -370,7 +370,7 @@ SOFTWARE.
             this.resetAnswer();
         else
             this.postAnswers(this.fullAnswerData());
-        // prevent any question-specific handlers 
+        // prevent any question-specific handlers
         // from firing on this checkbox
         e.stopPropagation();
     }, _Question_onUnload = function _Question_onUnload(e) {
