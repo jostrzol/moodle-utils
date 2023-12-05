@@ -1,7 +1,7 @@
 services:
   server:
     container_name: server
-    build: ./server
+    build: ./src
     image: krisboorger/moodle-utils:latest
     ports:
       - 8080:8080
@@ -19,6 +19,6 @@ services:
       - key.pem
 secrets:
   cert.pem:
-    file: server/tls/localhost.pem
+    file: src/tls/localhost.pem
   key.pem:
-    file: server/tls/localhost-key.pem
+    file: src/tls/localhost-key.pem

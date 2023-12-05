@@ -1,7 +1,7 @@
 services:
   server:
     container_name: server
-    build: ./server
+    build: ./src
     image: krisboorger/moodle-utils:latest
     ports:
       - 8080:8080

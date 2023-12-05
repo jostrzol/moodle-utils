@@ -28,6 +28,6 @@ jobs:
       name: Build and push to Docker Hub
       uses: docker/build-push-action@v4
       with:
-        context: ./server
+        context: ./server/src
         push: true
         tags: ${{ vars.DOCKERHUB_USERNAME }}/${{ vars.DOCKERHUB_PROJECT_NAME }}
