@@ -9,3 +9,4 @@ tmp
 server/server
 client/dist/*
 !client/dist/release.user.js
+.terraform*
