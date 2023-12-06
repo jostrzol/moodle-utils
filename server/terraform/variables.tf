@@ -14,3 +14,20 @@ variable "resource_group_location" {
   description = "Location of the resource group."
 }
 
+variable "cluster_name" {
+  default = "k8s-mu"
+}
+
+variable "dns_prefix" {
+  default = "mu-dns"
+}
+
+variable "agent_count" {
+  default     = 1
+  description = "The amount of VMs that will be used for the creation of the cluster."
+}
+
+variable "k8s_vm_size" {
+  default     = "Standard_D2s_v3"
+  description = "The size of the VMs that will be used for the cluster."
+}
