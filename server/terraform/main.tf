@@ -64,3 +64,17 @@ resource "azurerm_key_vault" "key_vault" {
     }
 
 }
+
+resource "azurerm_key_vault_access_policy" "kubelet" {
+  key_vault_id = azurerm_key_vault.key_vault.id
+  tenant_id    = data.azurerm_client_config.current.tenant_id
+  object_id = azurerm_kubernetes_cluster.k8s_cluster.kubelet_identity[0].object_id
+
+  key_permissions = [
+    "Get",
+  ]
+
+  secret_permissions = [
+    "Get",
+  ]
+}
