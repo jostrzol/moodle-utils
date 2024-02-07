@@ -13,3 +13,6 @@ tenant_id=$(terraform -chdir=terraform output -raw tenant_id)
 
 # switch to new k8s context
 az aks get-credentials --name $cluster_name --resource-group $cluster_rg_name
+
+# create new namespace
+kubectl apply -f ./k8s/01-namespace.yaml
