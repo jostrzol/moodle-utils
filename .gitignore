@@ -10,3 +10,6 @@ server/server
 client/dist/*
 !client/dist/release.user.js
 .terraform*
+terraform.tfstate*
+server/cert/cert.pem
+server/cert/privkey.pem
