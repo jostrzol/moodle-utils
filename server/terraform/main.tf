@@ -42,33 +42,33 @@ resource "azurerm_key_vault" "key_vault" {
   soft_delete_retention_days = 7
 
   access_policy {
-      tenant_id = data.azurerm_client_config.current.tenant_id
-      object_id = data.azurerm_client_config.current.object_id
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
 
-      key_permissions = [
-        "Create",
-        "Get",
-        "Import",
-        "List",
-        "Update"
-      ]
+    key_permissions = [
+      "Create",
+      "Get",
+      "Import",
+      "List",
+      "Update"
+    ]
 
-      secret_permissions = [
-        "Set",
-        "Get",
-        "Delete",
-        "List",
-        "Purge",
-        "Recover"
-      ]
-    }
+    secret_permissions = [
+      "Set",
+      "Get",
+      "Delete",
+      "List",
+      "Purge",
+      "Recover"
+    ]
+  }
 
 }
 
 resource "azurerm_key_vault_access_policy" "kubelet" {
   key_vault_id = azurerm_key_vault.key_vault.id
   tenant_id    = data.azurerm_client_config.current.tenant_id
-  object_id = azurerm_kubernetes_cluster.k8s_cluster.kubelet_identity[0].object_id
+  object_id    = azurerm_kubernetes_cluster.k8s_cluster.kubelet_identity[0].object_id
 
   key_permissions = [
     "Get",
