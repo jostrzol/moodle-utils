@@ -19,7 +19,7 @@ tenant_id=$(terraform -chdir=terraform output -raw tenant_id)
 az aks get-credentials --name $cluster_name --resource-group $cluster_rg_name
 
 # create new namespace
-kubectl apply -f ./k8s/01-namespace.yaml
+kubectl apply -f ./k8s/00-namespace.yaml
 
-# apply the rest of k8s config files
-kubectl apply -f ./k8s/ --overwrite=true -n $k8s_namespace
+# apply the rest of k8s config files before key vault
+kubectl apply -f ./k8s/1* --overwrite=true -n $k8s_namespace
