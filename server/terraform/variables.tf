@@ -33,11 +33,11 @@ variable "k8s_vm_size" {
 }
 
 variable "cert_cert_path" {
-  default     = "cert/cert.pem"
+  default     = "../cert/cert.pem"
   description = "Path to certificate used by the server"
 }
 
 variable "cert_key_path" {
-  default     = "cert/privkey.pem"
+  default     = "../cert/privkey.pem"
   description = "Path to key used with the certificate by the server"
 }
