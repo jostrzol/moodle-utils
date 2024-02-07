@@ -30,3 +30,5 @@ resource "azurerm_kubernetes_cluster" "k8s_cluster" {
     Environment = "Production"
   }
 }
+
+data "azurerm_client_config" "current" {}
