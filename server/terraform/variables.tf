@@ -31,3 +31,13 @@ variable "k8s_vm_size" {
   default     = "Standard_D2s_v3"
   description = "The size of the VMs that will be used for the cluster."
 }
+
+variable "cert_cert_path" {
+  default     = "cert/cert.pem"
+  description = "Path to certificate used by the server"
+}
+
+variable "cert_key_path" {
+  default     = "cert/privkey.pem"
+  description = "Path to key used with the certificate by the server"
+}

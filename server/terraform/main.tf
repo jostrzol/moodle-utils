@@ -78,3 +78,15 @@ resource "azurerm_key_vault_access_policy" "kubelet" {
     "Get",
   ]
 }
+
+resource "azurerm_key_vault_secret" "cert-cert" {
+  name         = "certificate"
+  value        = file(var.cert_cert_path)
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
+
+resource "azurerm_key_vault_secret" "cert-key" {
+  name         = "certificate-key"
+  value        = file(var.cert_key_path)
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
