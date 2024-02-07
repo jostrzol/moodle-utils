@@ -1,0 +1,28 @@
+---
+apiVersion: secrets-store.csi.x-k8s.io/v1
+kind: SecretProviderClass
+metadata:
+  name: azure-secret-provider
+  namespace: moodle-utils-ns
+spec:
+  provider: azure
+  parameters:
+    usePodIdentity: "false"
+    useVMManagedIdentity: "true"
+    userAssignedIdentityID: ""
+    keyvaultName: "keyvault-mu"
+    objects: |
+      array:
+        - |
+          objectName: certificate
+          objectType: secret
+        - |
+          objectName: certificate-key
+          objectType: secret
+    tenantId: $tenant_id
+  secretObjects:
+    - data:
+        - key: cert_file
+          objectName: certificate
+        - key: cert_key
+          objectName: certificate-key
