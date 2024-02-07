@@ -1,6 +1,10 @@
 #!/bin/sh
 set -euo pipefail
 
+### CONFIG ###
+# the namespace used
+k8s_namespace="moodle-utils-ns"
+#############
 
 # apply terraform files
 terraform -chdir=terraform init
@@ -16,3 +20,6 @@ az aks get-credentials --name $cluster_name --resource-group $cluster_rg_name
 
 # create new namespace
 kubectl apply -f ./k8s/01-namespace.yaml
+
+# apply the rest of k8s config files
+kubectl apply -f ./k8s/ --overwrite=true -n $k8s_namespace
